@@ -13,6 +13,6 @@ Unified toolkit to deal with CPF (Brazilian personal tax ID): formatting, genera
 - **Configurable components**: constructor and setters accept component instances, `*Options`/`Hash` (formatter/generator), or `nil`; validator is instance/`nil`/duck-type only (no `CpfValidatorOptions`).
 - **Per-call overrides**: `#format` and `#generate` accept an options `Hash`/instance or keyword overrides (not both); `#is_valid` takes input only.
 - **Root siblings**: after `require 'cpf-utilities'`, `CpfFmt`, `CpfGen`, and `CpfVal` remain loadable (same objects as the nests).
-- **Structured errors**: `CpfUtils::InvalidArgumentCombinationError` / `TypeMismatchError` (+ `CpfUtils::Error` marker); settings/`options` XOR keywords; domain failures via bundled `CpfFmt::DomainError` (and siblings).
+- **Structured errors**: façade misuse leaves plus full propagated `CpfFmt` / `CpfGen` / `CpfVal` error reference in the [README](./README.md) (including `on_fail` / `false` paths).
 
 For detailed usage and API reference, see the [README](./README.md).

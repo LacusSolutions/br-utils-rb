@@ -385,32 +385,244 @@ end
 
 #### Propagated from bundled packages
 
-- **Formatting** (`CpfFmt`): `CpfFmt::TypeMismatchError`, `CpfFmt::OutOfRangeError`, `CpfFmt::ValidationError`, `CpfFmt::InvalidLengthError` (passed to `on_fail`, not raised by `#format`), and related classes.
-- **Generation** (`CpfGen`): `CpfGen::TypeMismatchError`, `CpfGen::ValidationError`, and related classes.
-- **Validation** (`CpfVal`): `CpfVal::TypeMismatchError` and related classes.
+Component errors keep their package namespaces and propagate unchanged through the façade (and via nested / root sibling APIs). Each package also exposes an `*::Error` marker module for library-wide rescue. Invalid CPF **data** on `#is_valid` returns `false` (no domain raise). Formatting length failure is **not** raised by `#format` — it is delivered to **`on_fail`** as `CpfFmt::InvalidLengthError` (default `on_fail` returns `''`).
 
-Invalid option types are typically **`TypeError`** subclasses (`*::TypeMismatchError`); invalid option values are domain errors under each package’s `DomainError` hierarchy (where defined). Validation failure returns `false`; formatting length failure is handled by **`on_fail`** (default returns an empty string).
+##### Summary
+
+| Class | Inherits from | Category | Trigger condition |
+|-------|---------------|----------|-------------------|
+| `CpfFmt::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
+| `CpfFmt::TypeMismatchError` | `TypeError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
+| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
+| `CpfGen::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
+| `CpfGen::TypeMismatchError` | `TypeError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
+| `CpfGen::ValidationError` | `CpfGen::DomainError` | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
+| `CpfVal::TypeMismatchError` | `TypeError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
+
+##### `CpfFmt::DomainError`
+
+- **Inheritance:** `CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — ancestor for formatter domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `OutOfRangeError`, `ValidationError`, and re-raised `InvalidLengthError`.
+- **Example:** Prefer rescuing a leaf, or `CpfFmt::DomainError` for all formatter domain failures.
+- **How to rescue it:**
 
 ```ruby
-require 'cpf-utilities'
+rescue CpfFmt::DomainError
+  # OutOfRangeError, ValidationError, InvalidLengthError (if re-raised from on_fail)
+```
 
-begin
-  CpfUtils.new.format(12_345)
-rescue CpfFmt::TypeMismatchError => e
-  puts e.message
-end
+##### `CpfFmt::TypeMismatchError`
 
-begin
-  CpfUtils.new.is_valid(12_345_678_909)
-rescue CpfVal::TypeMismatchError => e
-  puts e.message
-end
+- **Inheritance:** `CpfFmt::TypeMismatchError < TypeError` (includes `CpfFmt::Error`)
+- **Category:** API misuse — wrong type for CPF input or a formatter option.
+- **When it is raised:** Raised when `#format` / `cpf_fmt` receives a non-`String` / non-`Array<String>` input, an option has the wrong type, or `on_fail` does not return a `String`.
+- **Example:**
 
-# Custom on_fail for invalid length
-custom_fail = ->(value, _exception) { "Invalid CPF: #{value}" }
+```ruby
+CpfUtils.new.format(12_345)   # raises CpfFmt::TypeMismatchError
+```
 
-CpfFmt.cpf_fmt('123', on_fail: custom_fail)   # => "Invalid CPF: 123"
-CpfFmt.cpf_fmt('123')                         # => "" (default on_fail)
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::TypeMismatchError
+  # formatter type-contract violation
+
+rescue TypeError
+  # native type errors, including CpfFmt::TypeMismatchError
+```
+
+##### `CpfFmt::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError` (includes `CpfFmt::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the formatter API.
+- **When it is raised:** Raised by `CpfFmt::CpfFormatter` / `CpfFmt.cpf_fmt` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The façade raises `CpfUtils::InvalidArgumentCombinationError` for the same pattern on `CpfUtils#format`.)
+- **Example:**
+
+```ruby
+CpfFmt::CpfFormatter.new({ dash_key: '_' }, hidden: true)
+# raises CpfFmt::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::InvalidArgumentCombinationError
+  # formatter invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CpfFmt::InvalidLengthError` (callback-delivered)
+
+- **Inheritance:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — sanitized CPF length is not exactly 11.
+- **When it is raised:** **Not raised** by `#format` / `cpf_fmt`; constructed and passed as the second argument to `on_fail`.
+- **Example:**
+
+```ruby
+custom_fail = ->(value, error) {
+  error   # => #<CpfFmt::InvalidLengthError ...>
+  "Invalid CPF: #{value}"
+}
+
+CpfUtils.new.format('123', on_fail: custom_fail)   # => "Invalid CPF: 123"
+CpfUtils.new.format('123')                         # => "" (default on_fail)
+```
+
+- **How to rescue it:** Handle inside `on_fail` (typical), or rescue if you re-raise:
+
+```ruby
+rescue CpfFmt::InvalidLengthError
+  # this exact length violation
+
+rescue CpfFmt::DomainError
+  # RangeError-rooted domain failures from cpf-fmt
+```
+
+##### `CpfFmt::OutOfRangeError`
+
+- **Inheritance:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — `hidden_start` / `hidden_end` outside `0`–`10`.
+- **When it is raised:** Raised when building or applying formatter options with an out-of-range hide index.
+- **Example:**
+
+```ruby
+CpfUtils.new.format('12345678909', hidden_start: -1)   # raises CpfFmt::OutOfRangeError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::OutOfRangeError
+  # this exact range violation
+
+rescue CpfFmt::DomainError
+  # RangeError-rooted domain failures from cpf-fmt
+```
+
+##### `CpfFmt::ValidationError`
+
+- **Inheritance:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — a key option contains a disallowed character.
+- **When it is raised:** Raised when `hidden_key`, `dot_key`, or `dash_key` contains a forbidden character.
+- **Example:**
+
+```ruby
+CpfUtils.new(formatter: { dot_key: 'å' })   # raises CpfFmt::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::ValidationError
+  # this exact domain validation failure
+
+rescue CpfFmt::DomainError
+  # RangeError-rooted domain failures from cpf-fmt
+```
+
+##### `CpfGen::DomainError`
+
+- **Inheritance:** `CpfGen::DomainError < RangeError` (includes `CpfGen::Error`)
+- **Category:** Domain error — ancestor for generator domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `CpfGen::ValidationError`.
+- **Example:** Prefer `rescue CpfGen::ValidationError` or `CpfGen::DomainError`.
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::DomainError
+  # ValidationError and other DomainError subclasses from cpf-gen
+```
+
+##### `CpfGen::TypeMismatchError`
+
+- **Inheritance:** `CpfGen::TypeMismatchError < TypeError` (includes `CpfGen::Error`)
+- **Category:** API misuse — wrong type for a generator option.
+- **When it is raised:** Raised when `format` or `prefix` has the wrong runtime type.
+- **Example:**
+
+```ruby
+CpfUtils.new.generate(prefix: 123)   # raises CpfGen::TypeMismatchError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::TypeMismatchError
+  # generator type-contract violation
+
+rescue TypeError
+  # native type errors, including CpfGen::TypeMismatchError
+```
+
+##### `CpfGen::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CpfGen::InvalidArgumentCombinationError < ArgumentError` (includes `CpfGen::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the generator API.
+- **When it is raised:** Raised by `CpfGen::CpfGenerator` / `CpfGen.cpf_gen` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The façade raises `CpfUtils::InvalidArgumentCombinationError` for the same pattern on `CpfUtils#generate`.)
+- **Example:**
+
+```ruby
+CpfGen::CpfGenerator.new({ format: true }, prefix: '123')
+# raises CpfGen::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::InvalidArgumentCombinationError
+  # generator invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CpfGen::ValidationError`
+
+- **Inheritance:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError` (includes `CpfGen::Error`)
+- **Category:** Domain error — ineligible `prefix`.
+- **When it is raised:** Raised when `prefix` is a zeroed base (`'000000000'`) or 9 repeated digits (e.g. `'999999999'`).
+- **Example:**
+
+```ruby
+CpfUtils.new.generate(prefix: '000000000')   # raises CpfGen::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::ValidationError
+  # this exact domain validation failure
+
+rescue CpfGen::DomainError
+  # RangeError-rooted domain failures from cpf-gen
+```
+
+##### `CpfVal::TypeMismatchError`
+
+- **Inheritance:** `CpfVal::TypeMismatchError < TypeError` (includes `CpfVal::Error`)
+- **Category:** API misuse — wrong type for CPF input.
+- **When it is raised:** Raised when `#is_valid` / `cpf_val` receives a value that is not a `String` or an `Array` of strings (including a non-string array element). Invalid CPF **data** returns `false` and does not raise.
+- **Example:**
+
+```ruby
+CpfUtils.new.is_valid(12_345_678_909)   # raises CpfVal::TypeMismatchError
+CpfUtils.new.is_valid('12345678900')    # => false (invalid data, no raise)
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfVal::TypeMismatchError
+  # validator type-contract violation
+
+rescue TypeError
+  # native type errors, including CpfVal::TypeMismatchError
 ```
 
 ### Bundled packages
