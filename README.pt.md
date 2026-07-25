@@ -370,32 +370,244 @@ end
 
 #### Propagados dos pacotes incluídos
 
-- **Formatação** (`CpfFmt`): `CpfFmt::TypeMismatchError`, `CpfFmt::OutOfRangeError`, `CpfFmt::ValidationError`, `CpfFmt::InvalidLengthError` (passado a `on_fail`, não lançado por `#format`) e classes relacionadas.
-- **Geração** (`CpfGen`): `CpfGen::TypeMismatchError`, `CpfGen::ValidationError` e classes relacionadas.
-- **Validação** (`CpfVal`): `CpfVal::TypeMismatchError` e classes relacionadas.
+Os erros de componentes mantêm os namespaces dos pacotes e propagam inalterados pela fachada (e pelas APIs aninhadas / irmãos na raiz). Cada pacote também expõe um módulo marcador `*::Error` para rescue em toda a biblioteca. **Dados** de CPF inválidos em `#is_valid` retornam `false` (sem raise de domínio). Falha de comprimento na formatação **não** é lançada por `#format` — é entregue a **`on_fail`** como `CpfFmt::InvalidLengthError` (`on_fail` padrão retorna `''`).
 
-Tipos de opção inválidos são tipicamente subclasses de **`TypeError`** (`*::TypeMismatchError`); valores de opção inválidos são erros de domínio sob a hierarquia `DomainError` de cada pacote (quando definida). Falha de validação retorna `false`; falha de comprimento na formatação é tratada por **`on_fail`** (o padrão retorna string vazia).
+##### Resumo
+
+| Classe | Herda de | Categoria | Condição de disparo |
+|--------|----------|-----------|---------------------|
+| `CpfFmt::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfFmt::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfFormatter` / `cpf_fmt` |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Erro de domínio | Comprimento sanitizado ≠ 11 — **passado a `on_fail`**, não lançado por `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_start` / `hidden_end` fora de `0`–`10` |
+| `CpfFmt::TypeMismatchError` | `TypeError` (+ `include CpfFmt::Error`) | Uso indevido da API | Entrada de CPF ou opção do formatador com tipo errado (ou retorno de `on_fail` que não é `String`) |
+| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_key` / `dot_key` / `dash_key` contém caractere proibido |
+| `CpfGen::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfGen::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfGenerator` / `cpf_gen` |
+| `CpfGen::TypeMismatchError` | `TypeError` (+ `include CpfGen::Error`) | Uso indevido da API | Opção do gerador (`format` / `prefix`) com tipo errado |
+| `CpfGen::ValidationError` | `CpfGen::DomainError` | Erro de domínio | `prefix` inelegível (base zerada ou 9 dígitos repetidos) |
+| `CpfVal::TypeMismatchError` | `TypeError` (+ `include CpfVal::Error`) | Uso indevido da API | Entrada de CPF não é `String` nem `Array` de strings |
+
+##### `CpfFmt::DomainError`
+
+- **Herança:** `CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Categoria:** Erro de domínio — ancestral das folhas de domínio do formatador.
+- **Quando é lançado:** Não é lançado diretamente; alvo de rescue para `OutOfRangeError`, `ValidationError` e `InvalidLengthError` re-lançado.
+- **Exemplo:** Prefira resgatar uma folha, ou `CpfFmt::DomainError` para todas as falhas de domínio do formatador.
+- **Como resgatá-lo:**
 
 ```ruby
-require 'cpf-utilities'
+rescue CpfFmt::DomainError
+  # OutOfRangeError, ValidationError, InvalidLengthError (se re-lançado de on_fail)
+```
 
-begin
-  CpfUtils.new.format(12_345)
-rescue CpfFmt::TypeMismatchError => e
-  puts e.message
-end
+##### `CpfFmt::TypeMismatchError`
 
-begin
-  CpfUtils.new.is_valid(12_345_678_909)
-rescue CpfVal::TypeMismatchError => e
-  puts e.message
-end
+- **Herança:** `CpfFmt::TypeMismatchError < TypeError` (inclui `CpfFmt::Error`)
+- **Categoria:** Uso indevido da API — tipo errado para entrada de CPF ou opção do formatador.
+- **Quando é lançado:** Quando `#format` / `cpf_fmt` recebe entrada que não é `String` / `Array<String>`, uma opção tem tipo errado, ou `on_fail` não retorna `String`.
+- **Exemplo:**
 
-# on_fail personalizado para comprimento inválido
-custom_fail = ->(value, _exception) { "CPF inválido: #{value}" }
+```ruby
+CpfUtils.new.format(12_345)   # lança CpfFmt::TypeMismatchError
+```
 
-CpfFmt.cpf_fmt('123', on_fail: custom_fail)   # => "CPF inválido: 123"
-CpfFmt.cpf_fmt('123')                         # => "" (on_fail padrão)
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfFmt::TypeMismatchError
+  # violação de contrato de tipo do formatador
+
+rescue TypeError
+  # erros nativos de tipo, incluindo CpfFmt::TypeMismatchError
+```
+
+##### `CpfFmt::InvalidArgumentCombinationError`
+
+- **Herança:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError` (inclui `CpfFmt::Error`)
+- **Categoria:** Uso indevido da API — `options` e keywords misturados na API do formatador.
+- **Quando é lançado:** Por `CpfFmt::CpfFormatter` / `CpfFmt.cpf_fmt` quando uma instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` são passados juntos. (A fachada lança `CpfUtils::InvalidArgumentCombinationError` para o mesmo padrão em `CpfUtils#format`.)
+- **Exemplo:**
+
+```ruby
+CpfFmt::CpfFormatter.new({ dash_key: '_' }, hidden: true)
+# lança CpfFmt::InvalidArgumentCombinationError
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfFmt::InvalidArgumentCombinationError
+  # combinação de assinatura inválida do formatador
+
+rescue ArgumentError
+  # erros nativos de argumento, incluindo este
+```
+
+##### `CpfFmt::InvalidLengthError` (entregue via callback)
+
+- **Herança:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Categoria:** Erro de domínio — comprimento sanitizado do CPF não é exatamente 11.
+- **Quando é lançado:** **Não é lançado** por `#format` / `cpf_fmt`; é construído e passado como segundo argumento de `on_fail`.
+- **Exemplo:**
+
+```ruby
+custom_fail = ->(value, error) {
+  error   # => #<CpfFmt::InvalidLengthError ...>
+  "CPF inválido: #{value}"
+}
+
+CpfUtils.new.format('123', on_fail: custom_fail)   # => "CPF inválido: 123"
+CpfUtils.new.format('123')                         # => "" (on_fail padrão)
+```
+
+- **Como resgatá-lo:** Trate dentro de `on_fail` (típico), ou faça rescue se re-lançar:
+
+```ruby
+rescue CpfFmt::InvalidLengthError
+  # esta violação exata de comprimento
+
+rescue CpfFmt::DomainError
+  # falhas de domínio com raiz em RangeError de cpf-fmt
+```
+
+##### `CpfFmt::OutOfRangeError`
+
+- **Herança:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Categoria:** Erro de domínio — `hidden_start` / `hidden_end` fora de `0`–`10`.
+- **Quando é lançado:** Ao construir ou aplicar opções do formatador com índice de ocultação fora da faixa.
+- **Exemplo:**
+
+```ruby
+CpfUtils.new.format('12345678909', hidden_start: -1)   # lança CpfFmt::OutOfRangeError
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfFmt::OutOfRangeError
+  # esta violação exata de faixa
+
+rescue CpfFmt::DomainError
+  # falhas de domínio com raiz em RangeError de cpf-fmt
+```
+
+##### `CpfFmt::ValidationError`
+
+- **Herança:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Categoria:** Erro de domínio — opção de chave com caractere proibido.
+- **Quando é lançado:** Quando `hidden_key`, `dot_key` ou `dash_key` contém um caractere proibido.
+- **Exemplo:**
+
+```ruby
+CpfUtils.new(formatter: { dot_key: 'å' })   # lança CpfFmt::ValidationError
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfFmt::ValidationError
+  # esta falha exata de validação de domínio
+
+rescue CpfFmt::DomainError
+  # falhas de domínio com raiz em RangeError de cpf-fmt
+```
+
+##### `CpfGen::DomainError`
+
+- **Herança:** `CpfGen::DomainError < RangeError` (inclui `CpfGen::Error`)
+- **Categoria:** Erro de domínio — ancestral das folhas de domínio do gerador.
+- **Quando é lançado:** Não é lançado diretamente; alvo de rescue para `CpfGen::ValidationError`.
+- **Exemplo:** Prefira `rescue CpfGen::ValidationError` ou `CpfGen::DomainError`.
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfGen::DomainError
+  # ValidationError e outras subclasses de DomainError de cpf-gen
+```
+
+##### `CpfGen::TypeMismatchError`
+
+- **Herança:** `CpfGen::TypeMismatchError < TypeError` (inclui `CpfGen::Error`)
+- **Categoria:** Uso indevido da API — tipo errado para opção do gerador.
+- **Quando é lançado:** Quando `format` ou `prefix` tem o tipo de runtime errado.
+- **Exemplo:**
+
+```ruby
+CpfUtils.new.generate(prefix: 123)   # lança CpfGen::TypeMismatchError
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfGen::TypeMismatchError
+  # violação de contrato de tipo do gerador
+
+rescue TypeError
+  # erros nativos de tipo, incluindo CpfGen::TypeMismatchError
+```
+
+##### `CpfGen::InvalidArgumentCombinationError`
+
+- **Herança:** `CpfGen::InvalidArgumentCombinationError < ArgumentError` (inclui `CpfGen::Error`)
+- **Categoria:** Uso indevido da API — `options` e keywords misturados na API do gerador.
+- **Quando é lançado:** Por `CpfGen::CpfGenerator` / `CpfGen.cpf_gen` quando uma instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` são passados juntos. (A fachada lança `CpfUtils::InvalidArgumentCombinationError` para o mesmo padrão em `CpfUtils#generate`.)
+- **Exemplo:**
+
+```ruby
+CpfGen::CpfGenerator.new({ format: true }, prefix: '123')
+# lança CpfGen::InvalidArgumentCombinationError
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfGen::InvalidArgumentCombinationError
+  # combinação de assinatura inválida do gerador
+
+rescue ArgumentError
+  # erros nativos de argumento, incluindo este
+```
+
+##### `CpfGen::ValidationError`
+
+- **Herança:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError` (inclui `CpfGen::Error`)
+- **Categoria:** Erro de domínio — `prefix` inelegível.
+- **Quando é lançado:** Quando `prefix` é base zerada (`'000000000'`) ou 9 dígitos repetidos (ex.: `'999999999'`).
+- **Exemplo:**
+
+```ruby
+CpfUtils.new.generate(prefix: '000000000')   # lança CpfGen::ValidationError
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfGen::ValidationError
+  # esta falha exata de validação de domínio
+
+rescue CpfGen::DomainError
+  # falhas de domínio com raiz em RangeError de cpf-gen
+```
+
+##### `CpfVal::TypeMismatchError`
+
+- **Herança:** `CpfVal::TypeMismatchError < TypeError` (inclui `CpfVal::Error`)
+- **Categoria:** Uso indevido da API — tipo errado para entrada de CPF.
+- **Quando é lançado:** Quando `#is_valid` / `cpf_val` recebe valor que não é `String` nem `Array` de strings (incluindo elemento não-string no array). **Dados** de CPF inválidos retornam `false` e não lançam.
+- **Exemplo:**
+
+```ruby
+CpfUtils.new.is_valid(12_345_678_909)   # lança CpfVal::TypeMismatchError
+CpfUtils.new.is_valid('12345678900')    # => false (dados inválidos, sem raise)
+```
+
+- **Como resgatá-lo:**
+
+```ruby
+rescue CpfVal::TypeMismatchError
+  # violação de contrato de tipo do validador
+
+rescue TypeError
+  # erros nativos de tipo, incluindo CpfVal::TypeMismatchError
 ```
 
 ### Pacotes incluídos
