@@ -8,9 +8,8 @@ require_relative 'cpf-utilities/version'
 # Entry point for the +cpf-utilities+ gem.
 #
 # Loads sibling packages (+cpf-fmt+, +cpf-gen+, +cpf-val+) and defines the
-# {CpfUtils} façade class. +version.rb+ defines a placeholder module so the
-# gemspec can read {CpfUtils::VERSION}; this file promotes it to the class
-# consumers instantiate.
+# {CpfUtils} façade class. +version.rb+ declares the placeholder class so the
+# gemspec can read {CpfUtils::VERSION}; later files reopen that same class.
 #
 # Two-tier access after +require 'cpf-utilities'+:
 #
@@ -20,13 +19,6 @@ require_relative 'cpf-utilities/version'
 #   types): {CpfUtils::CpfFmt}, {CpfUtils::CpfGen}, {CpfUtils::CpfVal}
 #   (same objects as +::CpfFmt+, +::CpfGen+, +::CpfVal+).
 # - Root siblings (+CpfFmt+, +CpfGen+, +CpfVal+) remain supported unchanged.
-unless CpfUtils.is_a?(Class)
-  version = CpfUtils::VERSION
-  Object.send(:remove_const, :CpfUtils)
-  CpfUtils = Class.new
-  CpfUtils.const_set(:VERSION, version)
-end
-
 require_relative 'cpf-utilities/errors'
 require_relative 'cpf-utilities/cpf_utils'
 require_relative 'cpf-utilities/cpf_fmt'
