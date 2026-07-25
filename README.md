@@ -262,8 +262,8 @@ Errors defined by this gem are **API misuse** only (wrong type or invalid argume
 
 | Class | Inherits from | Category | Trigger condition |
 |-------|---------------|----------|-------------------|
+| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Constructor: non-`nil` settings `Hash` with any non-`nil` keyword; or `#format`/`#generate`/class helpers: non-`nil` options `Hash`/`*Options` with any non-`nil` keyword |
 | `CpfUtils::TypeMismatchError` | `CpfUtils::TypeMismatchError < TypeError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Non-`nil` `settings` argument to `CpfUtils.new` is not a `Hash` |
-| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Non-`nil` settings/options `Hash` (or options instance) passed together with any non-`nil` keyword argument |
 
 ##### `CpfUtils::Error` (marker module)
 
@@ -305,7 +305,7 @@ rescue TypeError
 
 - **Inheritance:** `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CpfUtils::Error`)
 - **Category:** API misuse — the caller mixed mutually exclusive argument patterns.
-- **When it is raised:** Raised when `CpfUtils.new`, `#format`, `#generate`, or the class helpers receive both a non-`nil` settings/options `Hash` (or options instance) and any non-`nil` keyword argument at the same time.
+- **When it is raised:** Raised when `CpfUtils.new` receives both a non-`nil` settings `Hash` and any non-`nil` keyword argument (`formatter:`, `generator:`, `validator:`); or when `#format`, `#generate`, or the class helpers receive both a non-`nil` options `Hash`/`*Options` instance and any non-`nil` keyword argument at the same time. `#is_valid` has no options path and does not raise this error.
 - **Example:**
 
 ```ruby
