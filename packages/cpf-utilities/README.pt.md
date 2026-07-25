@@ -247,8 +247,8 @@ Os erros definidos por esta gem são apenas de **uso indevido da API** (tipo inc
 
 | Classe | Herda de | Categoria | Condição de disparo |
 |--------|----------|-----------|---------------------|
+| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | Uso indevido da API | Construtor: `Hash` de settings não-`nil` com qualquer argumento nomeado não-`nil`; ou `#format`/`#generate`/helpers de classe: `Hash`/instância `*Options` de options não-`nil` com qualquer argumento nomeado não-`nil` |
 | `CpfUtils::TypeMismatchError` | `CpfUtils::TypeMismatchError < TypeError < StandardError` (+ `include CpfUtils::Error`) | Uso indevido da API | Argumento `settings` não-`nil` de `CpfUtils.new` não é um `Hash` |
-| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | Uso indevido da API | `Hash`/instância de settings/options não-`nil` passado junto com qualquer argumento nomeado não-`nil` |
 
 ##### `CpfUtils::Error` (módulo marcador)
 
@@ -290,7 +290,7 @@ rescue TypeError
 
 - **Herança:** `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (inclui `CpfUtils::Error`)
 - **Categoria:** Uso indevido da API — o chamador misturou padrões de argumentos mutuamente exclusivos.
-- **Quando é lançado:** Quando `CpfUtils.new`, `#format`, `#generate` ou os helpers de classe recebem ao mesmo tempo um `Hash`/instância de settings/options não-`nil` e qualquer argumento nomeado não-`nil`.
+- **Quando é lançado:** Quando `CpfUtils.new` recebe ao mesmo tempo um `Hash` de settings não-`nil` e qualquer argumento nomeado não-`nil` (`formatter:`, `generator:`, `validator:`); ou quando `#format`, `#generate` ou os helpers de classe recebem ao mesmo tempo um `Hash`/instância `*Options` de options não-`nil` e qualquer argumento nomeado não-`nil`. `#is_valid` não tem caminho de options e não lança este erro.
 - **Exemplo:**
 
 ```ruby
