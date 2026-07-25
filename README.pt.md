@@ -336,12 +336,13 @@ end
 ```ruby
 require 'cpf-utilities'
 
-# 2) CpfUtils::DomainError — não se aplica: esta gem não define DomainError
-#    (nem folhas de domínio). Falhas de domínio vêm só dos pacotes incluídos.
-# begin
-#   CpfUtils.new.format(12_345)
-# rescue CpfUtils::DomainError  # NameError — constante não definida
-# end
+# 2) DomainError dos pacotes — esta gem não define DomainError; falhas de domínio
+#    vêm dos pacotes de componente e mantêm esses namespaces (ex.: CpfFmt).
+begin
+  CpfUtils.new.format('12345678909', hidden_start: -1)
+rescue CpfFmt::DomainError
+  # CpfFmt::OutOfRangeError, CpfFmt::ValidationError e outras subclasses de DomainError
+end
 ```
 
 ```ruby
