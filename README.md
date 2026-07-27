@@ -392,14 +392,14 @@ Component errors keep their package namespaces and propagate unchanged through t
 | Class | Inherits from | Category | Trigger condition |
 |-------|---------------|----------|-------------------|
 | `CpfFmt::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
-| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
-| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
 | `CpfFmt::TypeMismatchError` | `TypeError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
-| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
 | `CpfGen::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
 | `CpfGen::TypeMismatchError` | `TypeError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
-| `CpfGen::ValidationError` | `CpfGen::DomainError` | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
 | `CpfVal::TypeMismatchError` | `TypeError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
+| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
+| `CpfGen::ValidationError` | `CpfGen::DomainError` | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
 
 ##### `CpfFmt::DomainError`
 
