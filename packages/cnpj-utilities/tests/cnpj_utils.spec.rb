@@ -1044,6 +1044,17 @@ RSpec.describe CnpjUtils do
   end
 
   describe 'package smoke' do
+    it 'is an instantiable class' do
+      aggregate_failures do
+        expect(described_class).to be_a(Class)
+        expect(described_class.new).to be_a(described_class)
+      end
+    end
+
+    it 'exposes a VERSION string' do
+      expect(described_class::VERSION).to be_a(String).and match(/\A\d+\.\d+\.\d+\z/)
+    end
+
     it 'formats through DEFAULT with a custom slash_key' do
       result = described_class::DEFAULT.format('01ABC234000X56', slash_key: '|')
 

@@ -87,7 +87,7 @@ CnpjUtils.is_valid('98765432000199')       # => false
 You can work in these equivalent ways:
 
 1. **`CnpjUtils.format` / `.generate` / `.is_valid`** — class helpers for quick one-off calls (forward to `DEFAULT`).
-2. **`CnpjUtils::DEFAULT`** — mutable shared singleton (same object the class helpers use).
+2. **`CnpjUtils::DEFAULT`** — mutable shared singleton (same object the class helpers use; process-wide / not thread-isolated).
 3. **`CnpjUtils.new`** — configurable instance with shared defaults across format, generate, and validate.
 4. **Main classes under `CnpjUtils`** — `CnpjUtils::CnpjFormatter`, `CnpjUtils::CnpjGenerator`, `CnpjUtils::CnpjValidator`.
 5. **Nested package modules** — Options, helpers, errors, and types via `CnpjUtils::CnpjFmt` / `CnpjGen` / `CnpjVal` (e.g. `CnpjUtils::CnpjFmt::CnpjFormatterOptions`, `CnpjUtils::CnpjFmt.cnpj_fmt`).
@@ -145,7 +145,7 @@ CnpjUtils.is_valid('98765432000198')
 
 ### `CnpjUtils::DEFAULT` (default instance)
 
-`CnpjUtils::DEFAULT` is the pre-built, **mutable** singleton behind the class helpers (parity with the JS default export / Python `cnpj_utils`). Mutating it affects subsequent `CnpjUtils.format` / `.generate` / `.is_valid` calls; custom `CnpjUtils.new` instances stay independent:
+`CnpjUtils::DEFAULT` is the pre-built, **mutable** singleton behind the class helpers (parity with the JS default export / Python `cnpj_utils`). Its configuration is **process-wide and shared across threads**: mutating it (e.g. `DEFAULT.formatter = …`) affects subsequent `CnpjUtils.format` / `.generate` / `.is_valid` calls for every caller in the process. Prefer `CnpjUtils.new` or per-call options for concurrent or isolated work; custom instances stay independent of `DEFAULT`:
 
 ```ruby
 CnpjUtils::DEFAULT.formatter = { slash_key: '|' }
@@ -265,7 +265,7 @@ After `require 'cnpj-utilities'`:
 
 - **`CnpjUtils`**: Façade class to create a utils instance with optional default formatter, generator, and validator settings.
 - **`CnpjUtils.format` / `.generate` / `.is_valid`**: Class helpers that forward to `CnpjUtils::DEFAULT`.
-- **`CnpjUtils::DEFAULT`**: Mutable pre-built `CnpjUtils` instance (same object the class helpers use).
+- **`CnpjUtils::DEFAULT`**: Mutable pre-built `CnpjUtils` instance (same object the class helpers use). Process-wide / shared across threads — prefer `CnpjUtils.new` or per-call options under concurrency.
 - **`CnpjUtils::VERSION`**: Gem version string.
 - **Main-class shortcuts**: `CnpjUtils::CnpjFormatter`, `CnpjUtils::CnpjGenerator`, `CnpjUtils::CnpjValidator` (same objects as the sibling classes).
 - **Nested package modules**: `CnpjUtils::CnpjFmt`, `CnpjUtils::CnpjGen`, `CnpjUtils::CnpjVal` — full sibling surface (Options, helpers, errors, types). Options/helpers/errors are **not** aliased at the `CnpjUtils` root.
@@ -285,8 +285,8 @@ Errors defined by this gem are **API misuse** only (wrong type or invalid argume
 
 | Class | Inherits from | Category | Trigger condition |
 |-------|---------------|----------|-------------------|
-| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` `settings` argument to `CnpjUtils.new` is not a `Hash` |
 | `CnpjUtils::InvalidArgumentCombinationError` | `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` settings/options `Hash` (or options instance) passed together with any non-`nil` keyword argument |
+| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` `settings` argument to `CnpjUtils.new` is not a `Hash` |
 
 ##### `CnpjUtils::Error` (marker module)
 
