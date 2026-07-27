@@ -270,8 +270,8 @@ Os erros definidos por esta gem são apenas de **uso indevido da API** (tipo inc
 
 | Classe | Herda de | Categoria | Condição de disparo |
 |--------|----------|-----------|---------------------|
-| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | Uso indevido da API | Argumento `settings` não-`nil` de `CnpjUtils.new` não é um `Hash` |
 | `CnpjUtils::InvalidArgumentCombinationError` | `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjUtils::Error`) | Uso indevido da API | `Hash`/instância de settings/options não-`nil` passado junto com qualquer argumento nomeado não-`nil` |
+| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | Uso indevido da API | Argumento `settings` não-`nil` de `CnpjUtils.new` não é um `Hash` |
 
 ##### `CnpjUtils::Error` (módulo marcador)
 

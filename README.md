@@ -285,8 +285,8 @@ Errors defined by this gem are **API misuse** only (wrong type or invalid argume
 
 | Class | Inherits from | Category | Trigger condition |
 |-------|---------------|----------|-------------------|
-| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` `settings` argument to `CnpjUtils.new` is not a `Hash` |
 | `CnpjUtils::InvalidArgumentCombinationError` | `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` settings/options `Hash` (or options instance) passed together with any non-`nil` keyword argument |
+| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` `settings` argument to `CnpjUtils.new` is not a `Hash` |
 
 ##### `CnpjUtils::Error` (marker module)
 
