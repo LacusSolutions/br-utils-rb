@@ -376,19 +376,19 @@ Os erros de componentes mantêm os namespaces dos pacotes e propagam inalterados
 
 | Classe | Herda de | Categoria | Condição de disparo |
 |--------|----------|-----------|---------------------|
-| `CpfFmt::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfFmt::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfFormatter` / `cpf_fmt` |
-| `CpfFmt::TypeMismatchError` | `TypeError` (+ `include CpfFmt::Error`) | Uso indevido da API | Entrada de CPF ou opção do formatador com tipo errado (ou retorno de `on_fail` que não é `String`) |
-| `CpfGen::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfGen::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfGenerator` / `cpf_gen` |
-| `CpfGen::TypeMismatchError` | `TypeError` (+ `include CpfGen::Error`) | Uso indevido da API | Opção do gerador (`format` / `prefix`) com tipo errado |
-| `CpfVal::TypeMismatchError` | `TypeError` (+ `include CpfVal::Error`) | Uso indevido da API | Entrada de CPF não é `String` nem `Array` de strings |
-| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Erro de domínio | Comprimento sanitizado ≠ 11 — **passado a `on_fail`**, não lançado por `#format` |
-| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_start` / `hidden_end` fora de `0`–`10` |
-| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_key` / `dot_key` / `dash_key` contém caractere proibido |
-| `CpfGen::ValidationError` | `CpfGen::DomainError` | Erro de domínio | `prefix` inelegível (base zerada ou 9 dígitos repetidos) |
+| `CpfFmt::InvalidArgumentCombinationError` | `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfFmt::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfFormatter` / `cpf_fmt` |
+| `CpfFmt::TypeMismatchError` | `CpfFmt::TypeMismatchError < TypeError < StandardError` (+ `include CpfFmt::Error`) | Uso indevido da API | Entrada de CPF ou opção do formatador com tipo errado (ou retorno de `on_fail` que não é `String`) |
+| `CpfGen::InvalidArgumentCombinationError` | `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfGen::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfGenerator` / `cpf_gen` |
+| `CpfGen::TypeMismatchError` | `CpfGen::TypeMismatchError < TypeError < StandardError` (+ `include CpfGen::Error`) | Uso indevido da API | Opção do gerador (`format` / `prefix`) com tipo errado |
+| `CpfVal::TypeMismatchError` | `CpfVal::TypeMismatchError < TypeError < StandardError` (+ `include CpfVal::Error`) | Uso indevido da API | Entrada de CPF não é `String` nem `Array` de strings |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Erro de domínio | Comprimento sanitizado ≠ 11 — **passado a `on_fail`**, não lançado por `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Erro de domínio | `hidden_start` / `hidden_end` fora de `0`–`10` |
+| `CpfFmt::ValidationError` | `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Erro de domínio | `hidden_key` / `dot_key` / `dash_key` contém caractere proibido |
+| `CpfGen::ValidationError` | `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (+ `include CpfGen::Error`) | Erro de domínio | `prefix` inelegível (base zerada ou 9 dígitos repetidos) |
 
 ##### `CpfFmt::DomainError`
 
-- **Herança:** `CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Herança:** `CpfFmt::DomainError < RangeError < StandardError` (inclui `CpfFmt::Error`)
 - **Categoria:** Erro de domínio — ancestral das folhas de domínio do formatador.
 - **Quando é lançado:** Não é lançado diretamente; alvo de rescue para `OutOfRangeError`, `ValidationError` e `InvalidLengthError` re-lançado.
 - **Exemplo:** Prefira resgatar uma folha, ou `CpfFmt::DomainError` para todas as falhas de domínio do formatador.
@@ -401,7 +401,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfFmt::TypeMismatchError`
 
-- **Herança:** `CpfFmt::TypeMismatchError < TypeError` (inclui `CpfFmt::Error`)
+- **Herança:** `CpfFmt::TypeMismatchError < TypeError < StandardError` (inclui `CpfFmt::Error`)
 - **Categoria:** Uso indevido da API — tipo errado para entrada de CPF ou opção do formatador.
 - **Quando é lançado:** Quando `#format` / `cpf_fmt` recebe entrada que não é `String` / `Array<String>`, uma opção tem tipo errado, ou `on_fail` não retorna `String`.
 - **Exemplo:**
@@ -422,7 +422,7 @@ rescue TypeError
 
 ##### `CpfFmt::InvalidArgumentCombinationError`
 
-- **Herança:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError` (inclui `CpfFmt::Error`)
+- **Herança:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (inclui `CpfFmt::Error`)
 - **Categoria:** Uso indevido da API — `options` e keywords misturados na API do formatador.
 - **Quando é lançado:** Por `CpfFmt::CpfFormatter` / `CpfFmt.cpf_fmt` quando uma instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` são passados juntos. (A fachada lança `CpfUtils::InvalidArgumentCombinationError` para o mesmo padrão em `CpfUtils#format`.)
 - **Exemplo:**
@@ -444,7 +444,7 @@ rescue ArgumentError
 
 ##### `CpfFmt::InvalidLengthError` (entregue via callback)
 
-- **Herança:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Herança:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (inclui `CpfFmt::Error`)
 - **Categoria:** Erro de domínio — comprimento sanitizado do CPF não é exatamente 11.
 - **Quando é lançado:** **Não é lançado** por `#format` / `cpf_fmt`; é construído e passado como segundo argumento de `on_fail`.
 - **Exemplo:**
@@ -471,7 +471,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfFmt::OutOfRangeError`
 
-- **Herança:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Herança:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (inclui `CpfFmt::Error`)
 - **Categoria:** Erro de domínio — `hidden_start` / `hidden_end` fora de `0`–`10`.
 - **Quando é lançado:** Ao construir ou aplicar opções do formatador com índice de ocultação fora da faixa.
 - **Exemplo:**
@@ -492,7 +492,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfFmt::ValidationError`
 
-- **Herança:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError` (inclui `CpfFmt::Error`)
+- **Herança:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (inclui `CpfFmt::Error`)
 - **Categoria:** Erro de domínio — opção de chave com caractere proibido.
 - **Quando é lançado:** Quando `hidden_key`, `dot_key` ou `dash_key` contém um caractere proibido.
 - **Exemplo:**
@@ -513,7 +513,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfGen::DomainError`
 
-- **Herança:** `CpfGen::DomainError < RangeError` (inclui `CpfGen::Error`)
+- **Herança:** `CpfGen::DomainError < RangeError < StandardError` (inclui `CpfGen::Error`)
 - **Categoria:** Erro de domínio — ancestral das folhas de domínio do gerador.
 - **Quando é lançado:** Não é lançado diretamente; alvo de rescue para `CpfGen::ValidationError`.
 - **Exemplo:** Prefira `rescue CpfGen::ValidationError` ou `CpfGen::DomainError`.
@@ -526,7 +526,7 @@ rescue CpfGen::DomainError
 
 ##### `CpfGen::TypeMismatchError`
 
-- **Herança:** `CpfGen::TypeMismatchError < TypeError` (inclui `CpfGen::Error`)
+- **Herança:** `CpfGen::TypeMismatchError < TypeError < StandardError` (inclui `CpfGen::Error`)
 - **Categoria:** Uso indevido da API — tipo errado para opção do gerador.
 - **Quando é lançado:** Quando `format` ou `prefix` tem o tipo de runtime errado.
 - **Exemplo:**
@@ -547,7 +547,7 @@ rescue TypeError
 
 ##### `CpfGen::InvalidArgumentCombinationError`
 
-- **Herança:** `CpfGen::InvalidArgumentCombinationError < ArgumentError` (inclui `CpfGen::Error`)
+- **Herança:** `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (inclui `CpfGen::Error`)
 - **Categoria:** Uso indevido da API — `options` e keywords misturados na API do gerador.
 - **Quando é lançado:** Por `CpfGen::CpfGenerator` / `CpfGen.cpf_gen` quando uma instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` são passados juntos. (A fachada lança `CpfUtils::InvalidArgumentCombinationError` para o mesmo padrão em `CpfUtils#generate`.)
 - **Exemplo:**
@@ -569,7 +569,7 @@ rescue ArgumentError
 
 ##### `CpfGen::ValidationError`
 
-- **Herança:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError` (inclui `CpfGen::Error`)
+- **Herança:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (inclui `CpfGen::Error`)
 - **Categoria:** Erro de domínio — `prefix` inelegível.
 - **Quando é lançado:** Quando `prefix` é base zerada (`'000000000'`) ou 9 dígitos repetidos (ex.: `'999999999'`).
 - **Exemplo:**
@@ -590,7 +590,7 @@ rescue CpfGen::DomainError
 
 ##### `CpfVal::TypeMismatchError`
 
-- **Herança:** `CpfVal::TypeMismatchError < TypeError` (inclui `CpfVal::Error`)
+- **Herança:** `CpfVal::TypeMismatchError < TypeError < StandardError` (inclui `CpfVal::Error`)
 - **Categoria:** Uso indevido da API — tipo errado para entrada de CPF.
 - **Quando é lançado:** Quando `#is_valid` / `cpf_val` recebe valor que não é `String` nem `Array` de strings (incluindo elemento não-string no array). **Dados** de CPF inválidos retornam `false` e não lançam.
 - **Exemplo:**

@@ -391,19 +391,19 @@ Component errors keep their package namespaces and propagate unchanged through t
 
 | Class | Inherits from | Category | Trigger condition |
 |-------|---------------|----------|-------------------|
-| `CpfFmt::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
-| `CpfFmt::TypeMismatchError` | `TypeError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
-| `CpfGen::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
-| `CpfGen::TypeMismatchError` | `TypeError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
-| `CpfVal::TypeMismatchError` | `TypeError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
-| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
-| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
-| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
-| `CpfGen::ValidationError` | `CpfGen::DomainError` | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
+| `CpfFmt::InvalidArgumentCombinationError` | `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
+| `CpfFmt::TypeMismatchError` | `CpfFmt::TypeMismatchError < TypeError < StandardError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
+| `CpfGen::InvalidArgumentCombinationError` | `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
+| `CpfGen::TypeMismatchError` | `CpfGen::TypeMismatchError < TypeError < StandardError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
+| `CpfVal::TypeMismatchError` | `CpfVal::TypeMismatchError < TypeError < StandardError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
+| `CpfFmt::ValidationError` | `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
+| `CpfGen::ValidationError` | `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (+ `include CpfGen::Error`) | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
 
 ##### `CpfFmt::DomainError`
 
-- **Inheritance:** `CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Inheritance:** `CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
 - **Category:** Domain error — ancestor for formatter domain leaves.
 - **When it is raised:** Not raised directly; rescue target for `OutOfRangeError`, `ValidationError`, and re-raised `InvalidLengthError`.
 - **Example:** Prefer rescuing a leaf, or `CpfFmt::DomainError` for all formatter domain failures.
@@ -416,7 +416,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfFmt::TypeMismatchError`
 
-- **Inheritance:** `CpfFmt::TypeMismatchError < TypeError` (includes `CpfFmt::Error`)
+- **Inheritance:** `CpfFmt::TypeMismatchError < TypeError < StandardError` (includes `CpfFmt::Error`)
 - **Category:** API misuse — wrong type for CPF input or a formatter option.
 - **When it is raised:** Raised when `#format` / `cpf_fmt` receives a non-`String` / non-`Array<String>` input, an option has the wrong type, or `on_fail` does not return a `String`.
 - **Example:**
@@ -437,7 +437,7 @@ rescue TypeError
 
 ##### `CpfFmt::InvalidArgumentCombinationError`
 
-- **Inheritance:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError` (includes `CpfFmt::Error`)
+- **Inheritance:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CpfFmt::Error`)
 - **Category:** API misuse — mixed `options` and keywords on the formatter API.
 - **When it is raised:** Raised by `CpfFmt::CpfFormatter` / `CpfFmt.cpf_fmt` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The façade raises `CpfUtils::InvalidArgumentCombinationError` for the same pattern on `CpfUtils#format`.)
 - **Example:**
@@ -459,7 +459,7 @@ rescue ArgumentError
 
 ##### `CpfFmt::InvalidLengthError` (callback-delivered)
 
-- **Inheritance:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Inheritance:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
 - **Category:** Domain error — sanitized CPF length is not exactly 11.
 - **When it is raised:** **Not raised** by `#format` / `cpf_fmt`; constructed and passed as the second argument to `on_fail`.
 - **Example:**
@@ -486,7 +486,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfFmt::OutOfRangeError`
 
-- **Inheritance:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Inheritance:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
 - **Category:** Domain error — `hidden_start` / `hidden_end` outside `0`–`10`.
 - **When it is raised:** Raised when building or applying formatter options with an out-of-range hide index.
 - **Example:**
@@ -507,7 +507,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfFmt::ValidationError`
 
-- **Inheritance:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError` (includes `CpfFmt::Error`)
+- **Inheritance:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
 - **Category:** Domain error — a key option contains a disallowed character.
 - **When it is raised:** Raised when `hidden_key`, `dot_key`, or `dash_key` contains a forbidden character.
 - **Example:**
@@ -528,7 +528,7 @@ rescue CpfFmt::DomainError
 
 ##### `CpfGen::DomainError`
 
-- **Inheritance:** `CpfGen::DomainError < RangeError` (includes `CpfGen::Error`)
+- **Inheritance:** `CpfGen::DomainError < RangeError < StandardError` (includes `CpfGen::Error`)
 - **Category:** Domain error — ancestor for generator domain leaves.
 - **When it is raised:** Not raised directly; rescue target for `CpfGen::ValidationError`.
 - **Example:** Prefer `rescue CpfGen::ValidationError` or `CpfGen::DomainError`.
@@ -541,7 +541,7 @@ rescue CpfGen::DomainError
 
 ##### `CpfGen::TypeMismatchError`
 
-- **Inheritance:** `CpfGen::TypeMismatchError < TypeError` (includes `CpfGen::Error`)
+- **Inheritance:** `CpfGen::TypeMismatchError < TypeError < StandardError` (includes `CpfGen::Error`)
 - **Category:** API misuse — wrong type for a generator option.
 - **When it is raised:** Raised when `format` or `prefix` has the wrong runtime type.
 - **Example:**
@@ -562,7 +562,7 @@ rescue TypeError
 
 ##### `CpfGen::InvalidArgumentCombinationError`
 
-- **Inheritance:** `CpfGen::InvalidArgumentCombinationError < ArgumentError` (includes `CpfGen::Error`)
+- **Inheritance:** `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CpfGen::Error`)
 - **Category:** API misuse — mixed `options` and keywords on the generator API.
 - **When it is raised:** Raised by `CpfGen::CpfGenerator` / `CpfGen.cpf_gen` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The façade raises `CpfUtils::InvalidArgumentCombinationError` for the same pattern on `CpfUtils#generate`.)
 - **Example:**
@@ -584,7 +584,7 @@ rescue ArgumentError
 
 ##### `CpfGen::ValidationError`
 
-- **Inheritance:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError` (includes `CpfGen::Error`)
+- **Inheritance:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (includes `CpfGen::Error`)
 - **Category:** Domain error — ineligible `prefix`.
 - **When it is raised:** Raised when `prefix` is a zeroed base (`'000000000'`) or 9 repeated digits (e.g. `'999999999'`).
 - **Example:**
@@ -605,7 +605,7 @@ rescue CpfGen::DomainError
 
 ##### `CpfVal::TypeMismatchError`
 
-- **Inheritance:** `CpfVal::TypeMismatchError < TypeError` (includes `CpfVal::Error`)
+- **Inheritance:** `CpfVal::TypeMismatchError < TypeError < StandardError` (includes `CpfVal::Error`)
 - **Category:** API misuse — wrong type for CPF input.
 - **When it is raised:** Raised when `#is_valid` / `cpf_val` receives a value that is not a `String` or an `Array` of strings (including a non-string array element). Invalid CPF **data** returns `false` and does not raise.
 - **Example:**
