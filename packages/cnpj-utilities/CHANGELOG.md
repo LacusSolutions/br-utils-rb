@@ -8,7 +8,7 @@ Unified toolkit to deal with CNPJ (Brazilian legal entity ID): formatting, gener
 
 - **Unified façade**: `CnpjUtils` delegates `#format`, `#generate`, and `#is_valid` to `cnpj-fmt`, `cnpj-gen`, and `cnpj-val`.
 - **Alphanumeric CNPJ**: full support for the [14-character alphanumeric CNPJ](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2023/julho/cnpj-alfa-numerico); generate with `type` `"numeric"`, `"alphabetic"`, or `"alphanumeric"`.
-- **Quick helpers**: `CnpjUtils.format` / `.generate` / `.is_valid` alias mutable `CnpjUtils::DEFAULT`.
+- **Quick helpers**: `CnpjUtils.format` / `.generate` / `.is_valid` alias mutable `CnpjUtils::DEFAULT` (process-wide; prefer `CnpjUtils.new` / per-call options under concurrency).
 - **Two-tier re-exports**: `CnpjUtils::CnpjFormatter` / `CnpjGenerator` / `CnpjValidator` at the façade root; full sibling surface under `CnpjUtils::CnpjFmt` / `CnpjGen` / `CnpjVal`.
 - **Configurable components**: constructor and setters accept component instances, `*Options`, `Hash`, or `nil`; accessors expose `formatter`, `generator`, and `validator`.
 - **Per-call overrides**: `#format`, `#generate`, and `#is_valid` accept an options `Hash`/instance or keyword overrides (not both).
