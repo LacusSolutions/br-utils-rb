@@ -377,14 +377,14 @@ Os erros de componentes mantêm os namespaces dos pacotes e propagam inalterados
 | Classe | Herda de | Categoria | Condição de disparo |
 |--------|----------|-----------|---------------------|
 | `CpfFmt::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfFmt::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfFormatter` / `cpf_fmt` |
-| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Erro de domínio | Comprimento sanitizado ≠ 11 — **passado a `on_fail`**, não lançado por `#format` |
-| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_start` / `hidden_end` fora de `0`–`10` |
 | `CpfFmt::TypeMismatchError` | `TypeError` (+ `include CpfFmt::Error`) | Uso indevido da API | Entrada de CPF ou opção do formatador com tipo errado (ou retorno de `on_fail` que não é `String`) |
-| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_key` / `dot_key` / `dash_key` contém caractere proibido |
 | `CpfGen::InvalidArgumentCombinationError` | `ArgumentError` (+ `include CpfGen::Error`) | Uso indevido da API | Instância/`Hash` de `options` e qualquer argumento nomeado não-`nil` em `CpfGenerator` / `cpf_gen` |
 | `CpfGen::TypeMismatchError` | `TypeError` (+ `include CpfGen::Error`) | Uso indevido da API | Opção do gerador (`format` / `prefix`) com tipo errado |
-| `CpfGen::ValidationError` | `CpfGen::DomainError` | Erro de domínio | `prefix` inelegível (base zerada ou 9 dígitos repetidos) |
 | `CpfVal::TypeMismatchError` | `TypeError` (+ `include CpfVal::Error`) | Uso indevido da API | Entrada de CPF não é `String` nem `Array` de strings |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::DomainError` | Erro de domínio | Comprimento sanitizado ≠ 11 — **passado a `on_fail`**, não lançado por `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_start` / `hidden_end` fora de `0`–`10` |
+| `CpfFmt::ValidationError` | `CpfFmt::DomainError` | Erro de domínio | `hidden_key` / `dot_key` / `dash_key` contém caractere proibido |
+| `CpfGen::ValidationError` | `CpfGen::DomainError` | Erro de domínio | `prefix` inelegível (base zerada ou 9 dígitos repetidos) |
 
 ##### `CpfFmt::DomainError`
 
