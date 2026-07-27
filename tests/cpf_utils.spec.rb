@@ -243,7 +243,7 @@ RSpec.describe CpfUtils do
     end
 
     it 'does not expose CpfValidatorOptions' do
-      expect(described_class.const_defined?(:CpfValidatorOptions)).to be(false)
+      expect(described_class.const_defined?(:CpfValidatorOptions, false)).to be(false)
     end
 
     context 'with nested surface smoke' do
