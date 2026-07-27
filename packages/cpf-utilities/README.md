@@ -82,7 +82,7 @@ CpfUtils.is_valid('12345678900')      # => false
 You can work in these equivalent ways:
 
 1. **`CpfUtils.format` / `.generate` / `.is_valid`** — class helpers for quick one-off calls (forward to `DEFAULT`).
-2. **`CpfUtils::DEFAULT`** — mutable shared singleton (same object the class helpers use).
+2. **`CpfUtils::DEFAULT`** — mutable shared singleton (same object the class helpers use; process-wide / not thread-isolated).
 3. **`CpfUtils.new`** — configurable instance with shared defaults across format, generate, and validate.
 4. **Main classes under `CpfUtils`** — `CpfUtils::CpfFormatter`, `CpfUtils::CpfGenerator`, `CpfUtils::CpfValidator`.
 5. **Nested package modules** — Options, helpers, errors, and types via `CpfUtils::CpfFmt` / `CpfGen` / `CpfVal` (e.g. `CpfUtils::CpfFmt::CpfFormatterOptions`, `CpfUtils::CpfFmt.cpf_fmt`).
@@ -129,7 +129,7 @@ CpfUtils.is_valid('12345678909')
 
 ### `CpfUtils::DEFAULT` (default instance)
 
-`CpfUtils::DEFAULT` is the pre-built, **mutable** singleton behind the class helpers (parity with the JS default export / Python `cpf_utils`). Mutating it affects subsequent `CpfUtils.format` / `.generate` / `.is_valid` calls; custom `CpfUtils.new` instances stay independent:
+`CpfUtils::DEFAULT` is the pre-built, **mutable** singleton behind the class helpers (parity with the JS default export / Python `cpf_utils`). Its configuration is **process-wide and shared across threads**: mutating it (e.g. `DEFAULT.formatter = …`) affects subsequent `CpfUtils.format` / `.generate` / `.is_valid` calls for every caller in the process. Prefer `CpfUtils.new` or per-call options for concurrent or isolated work; custom instances stay independent of `DEFAULT`:
 
 ```ruby
 CpfUtils::DEFAULT.formatter = { dash_key: '|' }
@@ -242,7 +242,7 @@ After `require 'cpf-utilities'`:
 
 - **`CpfUtils`**: Façade class to create a utils instance with optional default formatter, generator, and validator settings.
 - **`CpfUtils.format` / `.generate` / `.is_valid`**: Class helpers that forward to `CpfUtils::DEFAULT`.
-- **`CpfUtils::DEFAULT`**: Mutable pre-built `CpfUtils` instance (same object the class helpers use).
+- **`CpfUtils::DEFAULT`**: Mutable pre-built `CpfUtils` instance (same object the class helpers use). Process-wide / shared across threads — prefer `CpfUtils.new` or per-call options under concurrency.
 - **`CpfUtils::VERSION`**: Gem version string.
 - **Main-class shortcuts**: `CpfUtils::CpfFormatter`, `CpfUtils::CpfGenerator`, `CpfUtils::CpfValidator` (same objects as the sibling classes).
 - **Nested package modules**: `CpfUtils::CpfFmt`, `CpfUtils::CpfGen`, `CpfUtils::CpfVal` — full sibling surface (Options, helpers, errors, types). Options/helpers/errors are **not** aliased at the `CpfUtils` root.

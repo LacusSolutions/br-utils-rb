@@ -67,7 +67,7 @@ CpfUtils.is_valid('12345678900')      # => false
 Você pode trabalhar destas formas equivalentes:
 
 1. **`CpfUtils.format` / `.generate` / `.is_valid`** — helpers de classe para chamadas rápidas (encaminham para `DEFAULT`).
-2. **`CpfUtils::DEFAULT`** — singleton compartilhado mutável (o mesmo objeto usado pelos helpers de classe).
+2. **`CpfUtils::DEFAULT`** — singleton compartilhado mutável (o mesmo objeto usado pelos helpers de classe; em todo o processo / não isolado por thread).
 3. **`CpfUtils.new`** — instância configurável com padrões compartilhados entre formatar, gerar e validar.
 4. **Classes principais sob `CpfUtils`** — `CpfUtils::CpfFormatter`, `CpfUtils::CpfGenerator`, `CpfUtils::CpfValidator`.
 5. **Módulos aninhados do pacote** — Options, helpers, erros e tipos via `CpfUtils::CpfFmt` / `CpfGen` / `CpfVal` (ex.: `CpfUtils::CpfFmt::CpfFormatterOptions`, `CpfUtils::CpfFmt.cpf_fmt`).
@@ -114,7 +114,7 @@ CpfUtils.is_valid('12345678909')
 
 ### `CpfUtils::DEFAULT` (instância padrão)
 
-`CpfUtils::DEFAULT` é o singleton pré-construído e **mutável** por trás dos helpers de classe (paridade com o export padrão do JS / `cpf_utils` do Python). Mutá-lo afeta chamadas seguintes a `CpfUtils.format` / `.generate` / `.is_valid`; instâncias `CpfUtils.new` personalizadas permanecem independentes:
+`CpfUtils::DEFAULT` é o singleton pré-construído e **mutável** por trás dos helpers de classe (paridade com o export padrão do JS / `cpf_utils` do Python). A configuração é **em todo o processo e compartilhada entre threads**: mutá-lo (ex.: `DEFAULT.formatter = …`) afeta chamadas seguintes a `CpfUtils.format` / `.generate` / `.is_valid` para todos os chamadores no processo. Prefira `CpfUtils.new` ou opções por chamada para trabalho concorrente ou isolado; instâncias personalizadas permanecem independentes de `DEFAULT`:
 
 ```ruby
 CpfUtils::DEFAULT.formatter = { dash_key: '|' }
@@ -227,7 +227,7 @@ Após `require 'cpf-utilities'`:
 
 - **`CpfUtils`**: Classe fachada para criar uma instância com configurações padrão opcionais de formatador, gerador e validador.
 - **`CpfUtils.format` / `.generate` / `.is_valid`**: Helpers de classe que encaminham para `CpfUtils::DEFAULT`.
-- **`CpfUtils::DEFAULT`**: Instância pré-construída mutável de `CpfUtils` (o mesmo objeto usado pelos helpers de classe).
+- **`CpfUtils::DEFAULT`**: Instância pré-construída mutável de `CpfUtils` (o mesmo objeto usado pelos helpers de classe). Em todo o processo / compartilhada entre threads — prefira `CpfUtils.new` ou opções por chamada sob concorrência.
 - **`CpfUtils::VERSION`**: String da versão da gem.
 - **Atalhos das classes principais**: `CpfUtils::CpfFormatter`, `CpfUtils::CpfGenerator`, `CpfUtils::CpfValidator` (os mesmos objetos das classes irmãs).
 - **Módulos aninhados do pacote**: `CpfUtils::CpfFmt`, `CpfUtils::CpfGen`, `CpfUtils::CpfVal` — superfície completa do irmão (Options, helpers, erros, tipos). Options/helpers/erros **não** são aliasados na raiz de `CpfUtils`.

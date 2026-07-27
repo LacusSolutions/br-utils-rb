@@ -14,7 +14,8 @@ require_relative 'errors'
 #
 # - {CpfUtils.format}, {CpfUtils.generate}, {CpfUtils.is_valid} — class helpers
 #   that alias {CpfUtils::DEFAULT} (preferred quick path)
-# - {CpfUtils::DEFAULT} — mutable shared singleton (JS/Python parity)
+# - {CpfUtils::DEFAULT} — mutable process-wide singleton (JS/Python parity; not
+#   thread-isolated — prefer {.new} / per-call options under concurrency)
 # - {CpfUtils#format}, {CpfUtils#generate}, {CpfUtils#is_valid} — instance API
 # - {CpfUtils::VERSION}
 # - {CpfUtils::InvalidArgumentCombinationError} (API misuse)
@@ -24,7 +25,9 @@ require_relative 'errors'
 # {CpfGen}, and {CpfVal} remain loadable after +require 'cpf-utilities'+.
 #
 # Mutating {CpfUtils::DEFAULT} (e.g. via setters) affects subsequent class-helper
-# calls. Custom {CpfUtils.new} instances are independent of +DEFAULT+.
+# calls process-wide (shared across threads). Prefer {CpfUtils.new} or per-call
+# options for concurrent or isolated work. Custom instances are independent of
+# +DEFAULT+.
 #
 # @example
 #   require 'cpf-utilities'
@@ -343,8 +346,11 @@ class CpfUtils
 
   # Default {CpfUtils} instance with default formatter, generator, and
   # validator options (parity with the JS default export / Python +cpf_utils+
-  # singleton). Mutating this instance (e.g. via setters) affects subsequent
-  # {CpfUtils.format}, {CpfUtils.generate}, and {CpfUtils.is_valid} calls.
+  # singleton). Configuration is process-wide and shared across threads:
+  # mutating this instance (e.g. via setters) affects subsequent
+  # {CpfUtils.format}, {CpfUtils.generate}, and {CpfUtils.is_valid} calls for
+  # every caller in the process. Prefer {CpfUtils.new} or per-call options for
+  # threaded or isolated work.
   DEFAULT = new
 
   class << self
