@@ -72,7 +72,7 @@ CnpjUtils.is_valid('98765432000199')       # => false
 Você pode trabalhar destas formas equivalentes:
 
 1. **`CnpjUtils.format` / `.generate` / `.is_valid`** — helpers de classe para chamadas rápidas (encaminham para `DEFAULT`).
-2. **`CnpjUtils::DEFAULT`** — singleton compartilhado mutável (o mesmo objeto usado pelos helpers de classe).
+2. **`CnpjUtils::DEFAULT`** — singleton compartilhado mutável (o mesmo objeto usado pelos helpers de classe; em todo o processo / não isolado por thread).
 3. **`CnpjUtils.new`** — instância configurável com padrões compartilhados entre formatar, gerar e validar.
 4. **Classes principais sob `CnpjUtils`** — `CnpjUtils::CnpjFormatter`, `CnpjUtils::CnpjGenerator`, `CnpjUtils::CnpjValidator`.
 5. **Módulos aninhados do pacote** — Options, helpers, erros e tipos via `CnpjUtils::CnpjFmt` / `CnpjGen` / `CnpjVal` (ex.: `CnpjUtils::CnpjFmt::CnpjFormatterOptions`, `CnpjUtils::CnpjFmt.cnpj_fmt`).
@@ -130,7 +130,7 @@ CnpjUtils.is_valid('98765432000198')
 
 ### `CnpjUtils::DEFAULT` (instância padrão)
 
-`CnpjUtils::DEFAULT` é o singleton pré-construído e **mutável** por trás dos helpers de classe (paridade com o export padrão do JS / `cnpj_utils` do Python). Mutá-lo afeta chamadas seguintes a `CnpjUtils.format` / `.generate` / `.is_valid`; instâncias `CnpjUtils.new` personalizadas permanecem independentes:
+`CnpjUtils::DEFAULT` é o singleton pré-construído e **mutável** por trás dos helpers de classe (paridade com o export padrão do JS / `cnpj_utils` do Python). A configuração é **em todo o processo e compartilhada entre threads**: mutá-lo (ex.: `DEFAULT.formatter = …`) afeta chamadas seguintes a `CnpjUtils.format` / `.generate` / `.is_valid` para todos os chamadores no processo. Prefira `CnpjUtils.new` ou opções por chamada para trabalho concorrente ou isolado; instâncias personalizadas permanecem independentes de `DEFAULT`:
 
 ```ruby
 CnpjUtils::DEFAULT.formatter = { slash_key: '|' }
@@ -250,7 +250,7 @@ Após `require 'cnpj-utilities'`:
 
 - **`CnpjUtils`**: Classe fachada para criar uma instância com configurações padrão opcionais de formatador, gerador e validador.
 - **`CnpjUtils.format` / `.generate` / `.is_valid`**: Helpers de classe que encaminham para `CnpjUtils::DEFAULT`.
-- **`CnpjUtils::DEFAULT`**: Instância pré-construída mutável de `CnpjUtils` (o mesmo objeto usado pelos helpers de classe).
+- **`CnpjUtils::DEFAULT`**: Instância pré-construída mutável de `CnpjUtils` (o mesmo objeto usado pelos helpers de classe). Em todo o processo / compartilhada entre threads — prefira `CnpjUtils.new` ou opções por chamada sob concorrência.
 - **`CnpjUtils::VERSION`**: String da versão da gem.
 - **Atalhos das classes principais**: `CnpjUtils::CnpjFormatter`, `CnpjUtils::CnpjGenerator`, `CnpjUtils::CnpjValidator` (os mesmos objetos das classes irmãs).
 - **Módulos aninhados do pacote**: `CnpjUtils::CnpjFmt`, `CnpjUtils::CnpjGen`, `CnpjUtils::CnpjVal` — superfície completa do irmão (Options, helpers, erros, tipos). Options/helpers/erros **não** são aliasados na raiz de `CnpjUtils`.

@@ -15,7 +15,8 @@ require_relative 'errors'
 #
 # - {CnpjUtils.format}, {CnpjUtils.generate}, {CnpjUtils.is_valid} — class helpers
 #   that alias {CnpjUtils::DEFAULT} (preferred quick path)
-# - {CnpjUtils::DEFAULT} — mutable shared singleton (JS/Python parity)
+# - {CnpjUtils::DEFAULT} — mutable process-wide singleton (JS/Python parity; not
+#   thread-isolated — prefer {.new} / per-call options under concurrency)
 # - {CnpjUtils#format}, {CnpjUtils#generate}, {CnpjUtils#is_valid} — instance API
 # - {CnpjUtils::VERSION}
 # - {CnpjUtils::InvalidArgumentCombinationError} (API misuse)
@@ -25,7 +26,9 @@ require_relative 'errors'
 # {CnpjGen}, and {CnpjVal} remain loadable after +require 'cnpj-utilities'+.
 #
 # Mutating {CnpjUtils::DEFAULT} (e.g. via setters) affects subsequent class-helper
-# calls. Custom {CnpjUtils.new} instances are independent of +DEFAULT+.
+# calls process-wide (shared across threads). Prefer {CnpjUtils.new} or per-call
+# options for concurrent or isolated work. Custom instances are independent of
+# +DEFAULT+.
 #
 # @example
 #   require 'cnpj-utilities'
@@ -372,8 +375,11 @@ class CnpjUtils
 
   # Default {CnpjUtils} instance with default formatter, generator, and
   # validator options (parity with the JS default export / Python +cnpj_utils+
-  # singleton). Mutating this instance (e.g. via setters) affects subsequent
-  # {CnpjUtils.format}, {CnpjUtils.generate}, and {CnpjUtils.is_valid} calls.
+  # singleton). Configuration is process-wide and shared across threads:
+  # mutating this instance (e.g. via setters) affects subsequent
+  # {CnpjUtils.format}, {CnpjUtils.generate}, and {CnpjUtils.is_valid} calls for
+  # every caller in the process. Prefer {CnpjUtils.new} or per-call options for
+  # threaded or isolated work.
   DEFAULT = new
 
   class << self
