@@ -607,12 +607,19 @@ end
 ```ruby
 require 'br-utilities'
 
-# 2) BrUtils::DomainError — not applicable: this gem defines no DomainError
-#    (and no domain leaves). Domain failures come from bundled packages only.
-# begin
-#   BrUtils.new(cpf: { formatter: { hidden_start: -1 } })
-# rescue BrUtils::DomainError  # NameError — constant is not defined
-# end
+# 2) Bundled DomainError — this gem defines no DomainError; domain failures
+#    come from bundled packages and keep those namespaces (e.g. CpfFmt, CnpjFmt).
+begin
+  BrUtils.new.cpf.format('12345678909', hidden_start: -1)
+rescue CpfFmt::DomainError
+  # CpfFmt::OutOfRangeError, CpfFmt::ValidationError, and other DomainError subclasses
+end
+
+begin
+  BrUtils.new.cnpj.format('91415732000793', hidden_start: -1)
+rescue CnpjFmt::DomainError
+  # CnpjFmt::OutOfRangeError, CnpjFmt::ValidationError, and other DomainError subclasses
+end
 ```
 
 ```ruby
@@ -640,41 +647,586 @@ end
 
 #### Propagated from bundled packages
 
-`BrUtils` does not redefine domain exception types. Construction, setters, and domain method calls raise the same errors as [`cpf-utilities`](../cpf-utilities/README.md) and [`cnpj-utilities`](../cnpj-utilities/README.md):
+Component errors keep their package namespaces and propagate unchanged through the façade (and via nested / root sibling APIs). Each package also exposes an `*::Error` marker module for library-wide rescue. Invalid CPF/CNPJ **data** on `#is_valid` returns `false` (no domain raise). Formatting length failure is **not** raised by `#format` — it is delivered to **`on_fail`** as `CpfFmt::InvalidLengthError` or `CnpjFmt::InvalidLengthError` (default `on_fail` returns `''`).
 
-- **CPF formatting**: `CpfFmt::TypeMismatchError`, `CpfFmt::OutOfRangeError`, `CpfFmt::ValidationError`, `CpfFmt::InvalidLengthError` (passed to `on_fail`, not raised by `#format`), and related classes.
-- **CPF generation**: `CpfGen::TypeMismatchError`, `CpfGen::ValidationError`, and related classes.
-- **CPF validation**: `CpfVal::TypeMismatchError` and related classes.
-- **CNPJ formatting**: `CnpjFmt::TypeMismatchError`, `CnpjFmt::OutOfRangeError`, `CnpjFmt::ValidationError`, `CnpjFmt::InvalidLengthError` (passed to `on_fail`), and related classes.
-- **CNPJ generation**: `CnpjGen::TypeMismatchError`, `CnpjGen::ValidationError`, and related classes.
-- **CNPJ validation**: `CnpjVal::TypeMismatchError`, `CnpjVal::ValidationError`, and related classes.
+`CpfUtils::*` / `CnpjUtils::*` misuse errors also propagate when nested aggregators are constructed or called through `BrUtils`. For exhaustive option tables and extra edge cases, see [`cpf-utilities`](../cpf-utilities/README.md) and [`cnpj-utilities`](../cnpj-utilities/README.md).
 
-Invalid option types are typically **`TypeError`** subclasses (`*::TypeMismatchError`); invalid option values are domain errors under each package’s `DomainError` hierarchy. CPF and CNPJ validation failures return `false`. Formatting length failures are handled by **`on_fail`** (default returns an empty string).
+##### Summary
+
+| Class | Inherits from | Category | Trigger condition |
+|-------|---------------|----------|-------------------|
+| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Both an options instance/`Hash` and any non-`nil` keyword on `CpfUtils#format` / `#generate` |
+| `CpfUtils::TypeMismatchError` | `CpfUtils::TypeMismatchError < TypeError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Non-`nil` nested `cpf` settings `Hash` contract violation on `CpfUtils.new` |
+| `CnpjUtils::InvalidArgumentCombinationError` | `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Both settings/options and any non-`nil` keyword on `CnpjUtils` construct/`#format` / `#generate` / `#is_valid` |
+| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` nested `cnpj` settings `Hash` contract violation on `CnpjUtils.new` |
+| `CpfFmt::InvalidArgumentCombinationError` | `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
+| `CpfFmt::TypeMismatchError` | `CpfFmt::TypeMismatchError < TypeError < StandardError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
+| `CpfGen::InvalidArgumentCombinationError` | `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
+| `CpfGen::TypeMismatchError` | `CpfGen::TypeMismatchError < TypeError < StandardError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
+| `CpfVal::TypeMismatchError` | `CpfVal::TypeMismatchError < TypeError < StandardError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
+| `CnpjFmt::InvalidArgumentCombinationError` | `CnpjFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CnpjFormatter` / `cnpj_fmt` |
+| `CnpjFmt::TypeMismatchError` | `CnpjFmt::TypeMismatchError < TypeError < StandardError` (+ `include CnpjFmt::Error`) | API misuse | CNPJ input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
+| `CnpjGen::InvalidArgumentCombinationError` | `CnpjGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CnpjGenerator` / `cnpj_gen` |
+| `CnpjGen::TypeMismatchError` | `CnpjGen::TypeMismatchError < TypeError < StandardError` (+ `include CnpjGen::Error`) | API misuse | Generator option (`format` / `prefix` / `type`) has the wrong type |
+| `CnpjVal::InvalidArgumentCombinationError` | `CnpjVal::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjVal::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CnpjValidator` / `cnpj_val` |
+| `CnpjVal::TypeMismatchError` | `CnpjVal::TypeMismatchError < TypeError < StandardError` (+ `include CnpjVal::Error`) | API misuse | CNPJ input or validator option has the wrong type |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
+| `CpfFmt::ValidationError` | `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
+| `CpfGen::ValidationError` | `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (+ `include CpfGen::Error`) | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
+| `CnpjFmt::InvalidLengthError` | `CnpjFmt::InvalidLengthError < CnpjFmt::DomainError < RangeError < StandardError` (+ `include CnpjFmt::Error`) | Domain error | Sanitized length ≠ 14 — **passed to `on_fail`**, not raised by `#format` |
+| `CnpjFmt::OutOfRangeError` | `CnpjFmt::OutOfRangeError < CnpjFmt::DomainError < RangeError < StandardError` (+ `include CnpjFmt::Error`) | Domain error | `hidden_start` / `hidden_end` outside `0`–`13` |
+| `CnpjFmt::ValidationError` | `CnpjFmt::ValidationError < CnpjFmt::DomainError < RangeError < StandardError` (+ `include CnpjFmt::Error`) | Domain error | `hidden_key` / `dot_key` / `slash_key` / `dash_key` contains a disallowed character |
+| `CnpjGen::ValidationError` | `CnpjGen::ValidationError < CnpjGen::DomainError < RangeError < StandardError` (+ `include CnpjGen::Error`) | Domain error | Ineligible `prefix`, or `type` not in `'alphabetic'` / `'alphanumeric'` / `'numeric'` |
+| `CnpjVal::ValidationError` | `CnpjVal::ValidationError < CnpjVal::DomainError < RangeError < StandardError` (+ `include CnpjVal::Error`) | Domain error | Validator `type` is not `'alphanumeric'` or `'numeric'` |
+
+##### `CpfFmt::DomainError`
+
+- **Inheritance:** `CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — ancestor for formatter domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `OutOfRangeError`, `ValidationError`, and re-raised `InvalidLengthError`.
+- **Example:** Prefer rescuing a leaf, or `CpfFmt::DomainError` for all CPF formatter domain failures.
+- **How to rescue it:**
 
 ```ruby
-require 'br-utilities'
-
-begin
-  BrUtils.new.cnpj.format(12_345)
-rescue CnpjFmt::TypeMismatchError => e
-  puts e.message
-end
-
-begin
-  BrUtils.new.cnpj.is_valid(12_345_678_000_198)
-rescue CnpjVal::TypeMismatchError => e
-  puts e.message
-end
-
-# Custom on_fail for invalid length
-custom_fail = ->(value, _exception) { "Invalid: #{value}" }
-
-BrUtils.cpf.format('short', on_fail: custom_fail)    # => "Invalid: short"
-BrUtils.cnpj.format('short', on_fail: custom_fail)   # => "Invalid: short"
-BrUtils.cpf.format('short')                          # => "" (default on_fail)
+rescue CpfFmt::DomainError
+  # OutOfRangeError, ValidationError, InvalidLengthError (if re-raised from on_fail)
 ```
 
-For exhaustive exception lists and edge-case behavior, see each [bundled package](#bundled-packages) README.
+##### `CpfFmt::TypeMismatchError`
+
+- **Inheritance:** `CpfFmt::TypeMismatchError < TypeError < StandardError` (includes `CpfFmt::Error`)
+- **Category:** API misuse — wrong type for CPF input or a formatter option.
+- **When it is raised:** Raised when `#format` / `cpf_fmt` receives a non-`String` / non-`Array<String>` input, an option has the wrong type, or `on_fail` does not return a `String`.
+- **Example:**
+
+```ruby
+BrUtils.new.cpf.format(12_345)   # raises CpfFmt::TypeMismatchError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::TypeMismatchError
+  # formatter type-contract violation
+
+rescue TypeError
+  # native type errors, including CpfFmt::TypeMismatchError
+```
+
+##### `CpfFmt::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CpfFmt::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the formatter API.
+- **When it is raised:** Raised by `CpfFmt::CpfFormatter` / `CpfFmt.cpf_fmt` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The CPF aggregator raises `CpfUtils::InvalidArgumentCombinationError` for the same pattern on `CpfUtils#format`.)
+- **Example:**
+
+```ruby
+CpfFmt::CpfFormatter.new({ dash_key: '_' }, hidden: true)
+# raises CpfFmt::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::InvalidArgumentCombinationError
+  # formatter invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CpfFmt::InvalidLengthError` (callback-delivered)
+
+- **Inheritance:** `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — sanitized CPF length is not exactly 11.
+- **When it is raised:** **Not raised** by `#format` / `cpf_fmt`; constructed and passed as the second argument to `on_fail`.
+- **Example:**
+
+```ruby
+custom_fail = ->(value, error) {
+  error   # => #<CpfFmt::InvalidLengthError ...>
+  "Invalid CPF: #{value}"
+}
+
+BrUtils.new.cpf.format('123', on_fail: custom_fail)   # => "Invalid CPF: 123"
+BrUtils.new.cpf.format('123')                         # => "" (default on_fail)
+```
+
+- **How to rescue it:** Handle inside `on_fail` (typical), or rescue if you re-raise:
+
+```ruby
+rescue CpfFmt::InvalidLengthError
+  # this exact length violation
+
+rescue CpfFmt::DomainError
+  # RangeError-rooted domain failures from cpf-fmt
+```
+
+##### `CpfFmt::OutOfRangeError`
+
+- **Inheritance:** `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — `hidden_start` / `hidden_end` outside `0`–`10`.
+- **When it is raised:** Raised when building or applying formatter options with an out-of-range hide index.
+- **Example:**
+
+```ruby
+BrUtils.new.cpf.format('12345678909', hidden_start: -1)   # raises CpfFmt::OutOfRangeError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::OutOfRangeError
+  # this exact range violation
+
+rescue CpfFmt::DomainError
+  # RangeError-rooted domain failures from cpf-fmt
+```
+
+##### `CpfFmt::ValidationError`
+
+- **Inheritance:** `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (includes `CpfFmt::Error`)
+- **Category:** Domain error — a key option contains a disallowed character.
+- **When it is raised:** Raised when `hidden_key`, `dot_key`, or `dash_key` contains a forbidden character.
+- **Example:**
+
+```ruby
+BrUtils.new(cpf: { formatter: { dot_key: 'å' } })   # raises CpfFmt::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfFmt::ValidationError
+  # this exact domain validation failure
+
+rescue CpfFmt::DomainError
+  # RangeError-rooted domain failures from cpf-fmt
+```
+
+##### `CpfGen::DomainError`
+
+- **Inheritance:** `CpfGen::DomainError < RangeError < StandardError` (includes `CpfGen::Error`)
+- **Category:** Domain error — ancestor for generator domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `CpfGen::ValidationError`.
+- **Example:** Prefer `rescue CpfGen::ValidationError` or `CpfGen::DomainError`.
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::DomainError
+  # ValidationError and other DomainError subclasses from cpf-gen
+```
+
+##### `CpfGen::TypeMismatchError`
+
+- **Inheritance:** `CpfGen::TypeMismatchError < TypeError < StandardError` (includes `CpfGen::Error`)
+- **Category:** API misuse — wrong type for a generator option.
+- **When it is raised:** Raised when `format` or `prefix` has the wrong runtime type.
+- **Example:**
+
+```ruby
+BrUtils.new.cpf.generate(prefix: 123)   # raises CpfGen::TypeMismatchError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::TypeMismatchError
+  # generator type-contract violation
+
+rescue TypeError
+  # native type errors, including CpfGen::TypeMismatchError
+```
+
+##### `CpfGen::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CpfGen::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the generator API.
+- **When it is raised:** Raised by `CpfGen::CpfGenerator` / `CpfGen.cpf_gen` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The CPF aggregator raises `CpfUtils::InvalidArgumentCombinationError` for the same pattern on `CpfUtils#generate`.)
+- **Example:**
+
+```ruby
+CpfGen::CpfGenerator.new({ format: true }, prefix: '123')
+# raises CpfGen::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::InvalidArgumentCombinationError
+  # generator invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CpfGen::ValidationError`
+
+- **Inheritance:** `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (includes `CpfGen::Error`)
+- **Category:** Domain error — ineligible `prefix`.
+- **When it is raised:** Raised when `prefix` is a zeroed base (`'000000000'`) or 9 repeated digits (e.g. `'999999999'`).
+- **Example:**
+
+```ruby
+BrUtils.new.cpf.generate(prefix: '000000000')   # raises CpfGen::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfGen::ValidationError
+  # this exact domain validation failure
+
+rescue CpfGen::DomainError
+  # RangeError-rooted domain failures from cpf-gen
+```
+
+##### `CpfVal::TypeMismatchError`
+
+- **Inheritance:** `CpfVal::TypeMismatchError < TypeError < StandardError` (includes `CpfVal::Error`)
+- **Category:** API misuse — wrong type for CPF input.
+- **When it is raised:** Raised when `#is_valid` / `cpf_val` receives a value that is not a `String` or an `Array` of strings (including a non-string array element). Invalid CPF **data** returns `false` and does not raise.
+- **Example:**
+
+```ruby
+BrUtils.new.cpf.is_valid(12_345_678_909)   # raises CpfVal::TypeMismatchError
+BrUtils.new.cpf.is_valid('12345678900')    # => false (invalid data, no raise)
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfVal::TypeMismatchError
+  # validator type-contract violation
+
+rescue TypeError
+  # native type errors, including CpfVal::TypeMismatchError
+```
+
+##### `CnpjFmt::DomainError`
+
+- **Inheritance:** `CnpjFmt::DomainError < RangeError < StandardError` (includes `CnpjFmt::Error`)
+- **Category:** Domain error — ancestor for formatter domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `OutOfRangeError`, `ValidationError`, and re-raised `InvalidLengthError`.
+- **Example:** Prefer rescuing a leaf, or `CnpjFmt::DomainError` for all CNPJ formatter domain failures.
+- **How to rescue it:**
+
+```ruby
+rescue CnpjFmt::DomainError
+  # OutOfRangeError, ValidationError, InvalidLengthError (if re-raised from on_fail)
+```
+
+##### `CnpjFmt::TypeMismatchError`
+
+- **Inheritance:** `CnpjFmt::TypeMismatchError < TypeError < StandardError` (includes `CnpjFmt::Error`)
+- **Category:** API misuse — wrong type for CNPJ input or a formatter option.
+- **When it is raised:** Raised when `#format` / `cnpj_fmt` receives a non-`String` / non-`Array<String>` input, an option has the wrong type, or `on_fail` does not return a `String`.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.format(12_345)   # raises CnpjFmt::TypeMismatchError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjFmt::TypeMismatchError
+  # formatter type-contract violation
+
+rescue TypeError
+  # native type errors, including CnpjFmt::TypeMismatchError
+```
+
+##### `CnpjFmt::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CnpjFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CnpjFmt::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the formatter API.
+- **When it is raised:** Raised by `CnpjFmt::CnpjFormatter` / `CnpjFmt.cnpj_fmt` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The CNPJ aggregator raises `CnpjUtils::InvalidArgumentCombinationError` for the same pattern on `CnpjUtils#format`.)
+- **Example:**
+
+```ruby
+CnpjFmt::CnpjFormatter.new({ slash_key: '|' }, hidden: true)
+# raises CnpjFmt::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjFmt::InvalidArgumentCombinationError
+  # formatter invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CnpjFmt::InvalidLengthError` (callback-delivered)
+
+- **Inheritance:** `CnpjFmt::InvalidLengthError < CnpjFmt::DomainError < RangeError < StandardError` (includes `CnpjFmt::Error`)
+- **Category:** Domain error — sanitized CNPJ length is not exactly 14.
+- **When it is raised:** **Not raised** by `#format` / `cnpj_fmt`; constructed and passed as the second argument to `on_fail`.
+- **Example:**
+
+```ruby
+custom_fail = ->(value, error) {
+  error   # => #<CnpjFmt::InvalidLengthError ...>
+  "Invalid CNPJ: #{value}"
+}
+
+BrUtils.new.cnpj.format('123', on_fail: custom_fail)   # => "Invalid CNPJ: 123"
+BrUtils.new.cnpj.format('123')                         # => "" (default on_fail)
+```
+
+- **How to rescue it:** Handle inside `on_fail` (typical), or rescue if you re-raise:
+
+```ruby
+rescue CnpjFmt::InvalidLengthError
+  # this exact length violation
+
+rescue CnpjFmt::DomainError
+  # RangeError-rooted domain failures from cnpj-fmt
+```
+
+##### `CnpjFmt::OutOfRangeError`
+
+- **Inheritance:** `CnpjFmt::OutOfRangeError < CnpjFmt::DomainError < RangeError < StandardError` (includes `CnpjFmt::Error`)
+- **Category:** Domain error — `hidden_start` / `hidden_end` outside `0`–`13`.
+- **When it is raised:** Raised when building or applying formatter options with an out-of-range hide index.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.format('91415732000793', hidden_start: -1)   # raises CnpjFmt::OutOfRangeError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjFmt::OutOfRangeError
+  # this exact range violation
+
+rescue CnpjFmt::DomainError
+  # RangeError-rooted domain failures from cnpj-fmt
+```
+
+##### `CnpjFmt::ValidationError`
+
+- **Inheritance:** `CnpjFmt::ValidationError < CnpjFmt::DomainError < RangeError < StandardError` (includes `CnpjFmt::Error`)
+- **Category:** Domain error — a key option contains a disallowed character.
+- **When it is raised:** Raised when `hidden_key`, `dot_key`, `slash_key`, or `dash_key` contains a forbidden character.
+- **Example:**
+
+```ruby
+BrUtils.new(cnpj: { formatter: { slash_key: 'å' } })   # raises CnpjFmt::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjFmt::ValidationError
+  # this exact domain validation failure
+
+rescue CnpjFmt::DomainError
+  # RangeError-rooted domain failures from cnpj-fmt
+```
+
+##### `CnpjGen::DomainError`
+
+- **Inheritance:** `CnpjGen::DomainError < RangeError < StandardError` (includes `CnpjGen::Error`)
+- **Category:** Domain error — ancestor for generator domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `CnpjGen::ValidationError`.
+- **Example:** Prefer `rescue CnpjGen::ValidationError` or `CnpjGen::DomainError`.
+- **How to rescue it:**
+
+```ruby
+rescue CnpjGen::DomainError
+  # ValidationError and other DomainError subclasses from cnpj-gen
+```
+
+##### `CnpjGen::TypeMismatchError`
+
+- **Inheritance:** `CnpjGen::TypeMismatchError < TypeError < StandardError` (includes `CnpjGen::Error`)
+- **Category:** API misuse — wrong type for a generator option.
+- **When it is raised:** Raised when `format`, `prefix`, or `type` has the wrong runtime type.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.generate(prefix: 123)   # raises CnpjGen::TypeMismatchError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjGen::TypeMismatchError
+  # generator type-contract violation
+
+rescue TypeError
+  # native type errors, including CnpjGen::TypeMismatchError
+```
+
+##### `CnpjGen::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CnpjGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CnpjGen::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the generator API.
+- **When it is raised:** Raised by `CnpjGen::CnpjGenerator` / `CnpjGen.cnpj_gen` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The CNPJ aggregator raises `CnpjUtils::InvalidArgumentCombinationError` for the same pattern on `CnpjUtils#generate`.)
+- **Example:**
+
+```ruby
+CnpjGen::CnpjGenerator.new({ format: true }, prefix: '123')
+# raises CnpjGen::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjGen::InvalidArgumentCombinationError
+  # generator invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CnpjGen::ValidationError`
+
+- **Inheritance:** `CnpjGen::ValidationError < CnpjGen::DomainError < RangeError < StandardError` (includes `CnpjGen::Error`)
+- **Category:** Domain error — ineligible `prefix` or disallowed `type`.
+- **When it is raised:** Raised when `prefix` is a zeroed base/branch ID or 12 repeated digits, or when `type` is not `'alphabetic'`, `'alphanumeric'`, or `'numeric'`.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.generate(type: 'boolean')   # raises CnpjGen::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjGen::ValidationError
+  # this exact domain validation failure
+
+rescue CnpjGen::DomainError
+  # RangeError-rooted domain failures from cnpj-gen
+```
+
+##### `CnpjVal::DomainError`
+
+- **Inheritance:** `CnpjVal::DomainError < RangeError < StandardError` (includes `CnpjVal::Error`)
+- **Category:** Domain error — ancestor for validator domain leaves.
+- **When it is raised:** Not raised directly; rescue target for `CnpjVal::ValidationError`.
+- **Example:** Prefer `rescue CnpjVal::ValidationError` or `CnpjVal::DomainError`.
+- **How to rescue it:**
+
+```ruby
+rescue CnpjVal::DomainError
+  # ValidationError and other DomainError subclasses from cnpj-val
+```
+
+##### `CnpjVal::TypeMismatchError`
+
+- **Inheritance:** `CnpjVal::TypeMismatchError < TypeError < StandardError` (includes `CnpjVal::Error`)
+- **Category:** API misuse — wrong type for CNPJ input or a validator option.
+- **When it is raised:** Raised when `#is_valid` / `cnpj_val` receives a value that is not a `String` or an `Array` of strings, or a validator option has the wrong type. Invalid CNPJ **data** returns `false` and does not raise.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.is_valid(12_345_678_000_198)   # raises CnpjVal::TypeMismatchError
+BrUtils.new.cnpj.is_valid('00000000000000')     # => false (invalid data, no raise)
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjVal::TypeMismatchError
+  # validator type-contract violation
+
+rescue TypeError
+  # native type errors, including CnpjVal::TypeMismatchError
+```
+
+##### `CnpjVal::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CnpjVal::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CnpjVal::Error`)
+- **Category:** API misuse — mixed `options` and keywords on the validator API.
+- **When it is raised:** Raised by `CnpjVal::CnpjValidator` / `CnpjVal.cnpj_val` when both an `options` instance/`Hash` and any non-`nil` keyword are passed. (The CNPJ aggregator raises `CnpjUtils::InvalidArgumentCombinationError` for the same pattern on `CnpjUtils#is_valid`.)
+- **Example:**
+
+```ruby
+CnpjVal.cnpj_val('98765432000198', { type: 'numeric' }, case_sensitive: false)
+# raises CnpjVal::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjVal::InvalidArgumentCombinationError
+  # validator invalid signature combination
+
+rescue ArgumentError
+  # native argument errors, including this one
+```
+
+##### `CnpjVal::ValidationError`
+
+- **Inheritance:** `CnpjVal::ValidationError < CnpjVal::DomainError < RangeError < StandardError` (includes `CnpjVal::Error`)
+- **Category:** Domain error — disallowed validator `type`.
+- **When it is raised:** Raised when `type` is not `'alphanumeric'` or `'numeric'`.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.is_valid('91415732000793', type: 'boolean')   # raises CnpjVal::ValidationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjVal::ValidationError
+  # this exact domain validation failure
+
+rescue CnpjVal::DomainError
+  # RangeError-rooted domain failures from cnpj-val
+```
+
+##### `CpfUtils::TypeMismatchError` / `CpfUtils::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CpfUtils::TypeMismatchError < TypeError` and `CpfUtils::InvalidArgumentCombinationError < ArgumentError` (both include `CpfUtils::Error`).
+- **Category:** API misuse on the nested CPF aggregator.
+- **When it is raised:** Raised when nested `cpf` settings to `CpfUtils.new` are a non-`Hash`, or when `CpfUtils#format` / `#generate` mix an options `Hash` with keywords.
+- **Example:**
+
+```ruby
+BrUtils.new.cpf.format({ hidden: true }, dash_key: '|')
+# raises CpfUtils::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfUtils::TypeMismatchError, CpfUtils::InvalidArgumentCombinationError
+  # CPF aggregator misuse (not BrUtils::Error)
+
+rescue CpfUtils::Error
+  # every custom error that includes CpfUtils::Error
+```
+
+##### `CnpjUtils::TypeMismatchError` / `CnpjUtils::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CnpjUtils::TypeMismatchError < TypeError` and `CnpjUtils::InvalidArgumentCombinationError < ArgumentError` (both include `CnpjUtils::Error`).
+- **Category:** API misuse on the nested CNPJ aggregator.
+- **When it is raised:** Raised when nested `cnpj` settings to `CnpjUtils.new` are a non-`Hash`, or when `CnpjUtils#format` / `#generate` / `#is_valid` mix settings/options with keywords.
+- **Example:**
+
+```ruby
+BrUtils.new.cnpj.format({ hidden: true }, slash_key: '|')
+# raises CnpjUtils::InvalidArgumentCombinationError
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjUtils::TypeMismatchError, CnpjUtils::InvalidArgumentCombinationError
+  # CNPJ aggregator misuse (not BrUtils::Error)
+
+rescue CnpjUtils::Error
+  # every custom error that includes CnpjUtils::Error
+```
 
 ### Bundled packages
 
