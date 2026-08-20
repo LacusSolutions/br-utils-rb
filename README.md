@@ -23,7 +23,7 @@ Requires Ruby **≥ 3.1** (see `required_ruby_version` in the gemspec).
 
 ## Features
 
-- ✅ **Unified top-level API**: Class helpers `BrUtils.cpf` / `.cnpj` alias `BrUtils::DEFAULT`; each domain offers `format`, `generate`, and `is_valid`
+- ✅ **Unified top-level API**: Class helpers `BrUtils.cpf` / `.cnpj` delegate to `BrUtils::DEFAULT.cpf` / `.cnpj`; each domain offers `format`, `generate`, and `is_valid`
 - ✅ **Bundled domains**: [`cpf-utilities`](https://rubygems.org/gems/cpf-utilities) and [`cnpj-utilities`](https://rubygems.org/gems/cnpj-utilities) installed together
 - ✅ **Alphanumeric CNPJ**: Full support for the new alphanumeric CNPJ format (introduced in 2026)
 - ✅ **Reusable instance**: `BrUtils` class with optional default CPF and CNPJ settings (nested mappings, flat component kwargs, or pre-built utils instances)
