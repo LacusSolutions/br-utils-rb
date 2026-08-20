@@ -16,7 +16,7 @@ Requer Ruby **≥ 3.1** (veja `required_ruby_version` no gemspec).
 
 ## Recursos
 
-- ✅ **API unificada de alto nível**: Helpers de classe `BrUtils.cpf` / `.cnpj` alias de `BrUtils::DEFAULT`; cada domínio oferece `format`, `generate` e `is_valid`
+- ✅ **API unificada de alto nível**: Helpers de classe `BrUtils.cpf` / `.cnpj` encaminham para `BrUtils::DEFAULT.cpf` / `.cnpj`; cada domínio oferece `format`, `generate` e `is_valid`
 - ✅ **Domínios empacotados**: [`cpf-utilities`](https://rubygems.org/gems/cpf-utilities) e [`cnpj-utilities`](https://rubygems.org/gems/cnpj-utilities) instalados juntos
 - ✅ **CNPJ alfanumérico**: Suporte completo ao novo formato alfanumérico de CNPJ (a partir de 2026)
 - ✅ **Instância reutilizável**: Classe `BrUtils` com configurações padrão opcionais de CPF e CNPJ (mapeamentos aninhados, kwargs planos de componentes ou instâncias prontas de utils)
