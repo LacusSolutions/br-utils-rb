@@ -613,6 +613,32 @@ RSpec.describe BrUtils do
           expect(utils.cnpj).to equal(cnpj_utils)
         end
       end
+
+      it 'adopts domain utils from string keys' do
+        cpf_utils = CpfUtils.new
+        cnpj_utils = CnpjUtils.new
+        utils = described_class.new({ 'cpf' => cpf_utils, 'cnpj' => cnpj_utils })
+
+        aggregate_failures do
+          expect(utils.cpf).to equal(cpf_utils)
+          expect(utils.cnpj).to equal(cnpj_utils)
+        end
+      end
+    end
+
+    context 'when a domain keyword and its flat keyword are both given' do
+      it 'ignores the flat keyword' do
+        cpf_utils = CpfUtils.new
+        utils = described_class.new(
+          cpf: cpf_utils,
+          cpf_formatter: CpfFmt::CpfFormatterOptions.new(dash_key: '|')
+        )
+
+        aggregate_failures do
+          expect(utils.cpf).to equal(cpf_utils)
+          expect(utils.cpf.formatter.options.all[:dash_key]).to eq('-')
+        end
+      end
     end
 
     context 'when called with a non-Hash settings value' do
