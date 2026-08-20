@@ -12,6 +12,6 @@ Unified toolkit to deal with Brazilian documents (CPF and CNPJ): validation, for
 - **Two-tier re-exports**: main classes at the façade root (`BrUtils::CpfFormatter`, `BrUtils::CnpjValidator`, …); full sibling surface under `BrUtils::CpfFmt` / `CpfUtils` / `CnpjFmt` / ….
 - **One install**: depends on `cpf-utilities` and `cnpj-utilities` so both domains ship without requiring each gem separately.
 - **Alphanumeric CNPJ**: CNPJ path supports 14-character alphanumeric IDs via `cnpj-utilities` (numeric CPF via `cpf-utilities`).
-- **Structured errors**: `BrUtils::TypeMismatchError` / `InvalidArgumentCombinationError` (+ `BrUtils::Error` marker) for façade misuse; domain errors propagate from nested packages.
+- **Structured errors**: `BrUtils::TypeMismatchError` / `InvalidArgumentCombinationError` (+ `BrUtils::Error` marker) for façade misuse; README documents every propagated `CpfFmt` / `CpfGen` / `CpfVal` / `CnpjFmt` / `CnpjGen` / `CnpjVal` leaf (including `on_fail` `InvalidLengthError`).
 
 For detailed usage and API reference, see the [README](./README.md).
