@@ -236,7 +236,7 @@ To change a single nested option without replacing the whole domain utils, mutat
 
 ### CPF operations
 
-CPF methods are accessed via `BrUtils.cpf`, `utils.cpf`, `CpfUtils`, or the `CpfFmt` / `CpfGen` / `CpfVal` helpers. CPF uses the API from [`cpf-utilities`](../cpf-utilities/README.md).
+CPF methods are accessed via `BrUtils.cpf`, `utils.cpf`, `CpfUtils`, or the `CpfFmt` / `CpfGen` / `CpfVal` helpers. CPF uses the API from [`cpf-utilities`](packages/cpf-utilities/README.md).
 
 #### Formatting (`#format` / `CpfFmt.cpf_fmt`)
 
@@ -299,7 +299,7 @@ CpfVal.cpf_val('12345678909')            # => true
 
 ### CNPJ operations
 
-CNPJ methods are accessed via `BrUtils.cnpj`, `utils.cnpj`, `CnpjUtils`, or the `CnpjFmt` / `CnpjGen` / `CnpjVal` helpers. CNPJ uses the API from [`cnpj-utilities`](../cnpj-utilities/README.md).
+CNPJ methods are accessed via `BrUtils.cnpj`, `utils.cnpj`, `CnpjUtils`, or the `CnpjFmt` / `CnpjGen` / `CnpjVal` helpers. CNPJ uses the API from [`cnpj-utilities`](packages/cnpj-utilities/README.md).
 
 #### Formatting (`#format` / `CnpjFmt.cnpj_fmt`)
 
@@ -468,7 +468,7 @@ CnpjGen.cnpj_gen(type: 'numeric')              # => e.g. "65453043000178"
 CnpjVal.cnpj_val('9JN7MGLJZXIO50')             # => true
 ```
 
-See [`cpf-utilities`](../cpf-utilities/README.md) and [`cnpj-utilities`](../cnpj-utilities/README.md) for full option and error details.
+See [`cpf-utilities`](packages/cpf-utilities/README.md) and [`cnpj-utilities`](packages/cnpj-utilities/README.md) for full option and error details.
 
 ### Mixing styles
 
@@ -649,7 +649,7 @@ end
 
 Component errors keep their package namespaces and propagate unchanged through the façade (and via nested / root sibling APIs). Each package also exposes an `*::Error` marker module for library-wide rescue. Invalid CPF/CNPJ **data** on `#is_valid` returns `false` (no domain raise). Formatting length failure is **not** raised by `#format` — it is delivered to **`on_fail`** as `CpfFmt::InvalidLengthError` or `CnpjFmt::InvalidLengthError` (default `on_fail` returns `''`).
 
-`CpfUtils::*` / `CnpjUtils::*` misuse errors also propagate when nested aggregators are constructed or called through `BrUtils`. For exhaustive option tables and extra edge cases, see [`cpf-utilities`](../cpf-utilities/README.md) and [`cnpj-utilities`](../cnpj-utilities/README.md).
+`CpfUtils::*` / `CnpjUtils::*` misuse errors also propagate when nested aggregators are constructed or called through `BrUtils`. For exhaustive option tables and extra edge cases, see [`cpf-utilities`](packages/cpf-utilities/README.md) and [`cnpj-utilities`](packages/cnpj-utilities/README.md).
 
 ##### Summary
 
@@ -1232,8 +1232,8 @@ rescue CnpjUtils::Error
 
 | Package | Main resources | README |
 |---------|----------------|--------|
-| [`cpf-utilities`](https://rubygems.org/gems/cpf-utilities) | `CpfUtils`, `CpfFormatter`, `CpfGenerator`, `CpfValidator`, `CpfFmt.cpf_fmt`, `CpfGen.cpf_gen`, `CpfVal.cpf_val` | [docs](../cpf-utilities/README.md) |
-| [`cnpj-utilities`](https://rubygems.org/gems/cnpj-utilities) | `CnpjUtils`, `CnpjFormatter`, `CnpjGenerator`, `CnpjValidator`, `CnpjFmt.cnpj_fmt`, `CnpjGen.cnpj_gen`, `CnpjVal.cnpj_val` | [docs](../cnpj-utilities/README.md) |
+| [`cpf-utilities`](https://rubygems.org/gems/cpf-utilities) | `CpfUtils`, `CpfFormatter`, `CpfGenerator`, `CpfValidator`, `CpfFmt.cpf_fmt`, `CpfGen.cpf_gen`, `CpfVal.cpf_val` | [docs](packages/cpf-utilities/README.md) |
+| [`cnpj-utilities`](https://rubygems.org/gems/cnpj-utilities) | `CnpjUtils`, `CnpjFormatter`, `CnpjGenerator`, `CnpjValidator`, `CnpjFmt.cnpj_fmt`, `CnpjGen.cnpj_gen`, `CnpjVal.cnpj_val` | [docs](packages/cnpj-utilities/README.md) |
 
 All of the above are pulled in as dependencies of **`br-utilities`**. Interactive demos: [CPF](https://cpf-utils.vercel.app/) and [CNPJ](https://cnpj-utils.vercel.app/).
 
@@ -1252,7 +1252,7 @@ This project is licensed under the MIT License — see the [LICENSE](https://git
 
 ## Changelog
 
-See [CHANGELOG](./CHANGELOG.md) for a list of changes and version history.
+See [CHANGELOG](packages/br-utilities/CHANGELOG.md) for a list of changes and version history.
 
 ---
 

@@ -229,7 +229,7 @@ Para alterar uma única opção aninhada sem substituir o utils de domínio inte
 
 ### Operações de CPF
 
-Os métodos de CPF são acessados via `BrUtils.cpf`, `utils.cpf`, `CpfUtils` ou os helpers `CpfFmt` / `CpfGen` / `CpfVal`. O CPF usa a API de [`cpf-utilities`](../cpf-utilities/README.pt.md).
+Os métodos de CPF são acessados via `BrUtils.cpf`, `utils.cpf`, `CpfUtils` ou os helpers `CpfFmt` / `CpfGen` / `CpfVal`. O CPF usa a API de [`cpf-utilities`](packages/cpf-utilities/README.pt.md).
 
 #### Formatação (`#format` / `CpfFmt.cpf_fmt`)
 
@@ -292,7 +292,7 @@ CpfVal.cpf_val('12345678909')            # => true
 
 ### Operações de CNPJ
 
-Os métodos de CNPJ são acessados via `BrUtils.cnpj`, `utils.cnpj`, `CnpjUtils` ou os helpers `CnpjFmt` / `CnpjGen` / `CnpjVal`. O CNPJ usa a API de [`cnpj-utilities`](../cnpj-utilities/README.pt.md).
+Os métodos de CNPJ são acessados via `BrUtils.cnpj`, `utils.cnpj`, `CnpjUtils` ou os helpers `CnpjFmt` / `CnpjGen` / `CnpjVal`. O CNPJ usa a API de [`cnpj-utilities`](packages/cnpj-utilities/README.pt.md).
 
 #### Formatação (`#format` / `CnpjFmt.cnpj_fmt`)
 
@@ -461,7 +461,7 @@ CnpjGen.cnpj_gen(type: 'numeric')              # => ex.: "65453043000178"
 CnpjVal.cnpj_val('9JN7MGLJZXIO50')             # => true
 ```
 
-Consulte [`cpf-utilities`](../cpf-utilities/README.pt.md) e [`cnpj-utilities`](../cnpj-utilities/README.pt.md) para detalhes completos de opções e erros.
+Consulte [`cpf-utilities`](packages/cpf-utilities/README.pt.md) e [`cnpj-utilities`](packages/cnpj-utilities/README.pt.md) para detalhes completos de opções e erros.
 
 ### Misturando estilos
 
@@ -642,7 +642,7 @@ end
 
 Os erros dos componentes mantêm os namespaces dos pacotes e se propagam inalterados pela fachada (e pelas APIs aninhadas / irmãs na raiz). Cada pacote também expõe um módulo marcador `*::Error` para rescue em toda a biblioteca. **Dados** inválidos de CPF/CNPJ em `#is_valid` retornam `false` (sem raise de domínio). Falha de comprimento na formatação **não** é lançada por `#format` — é entregue a **`on_fail`** como `CpfFmt::InvalidLengthError` ou `CnpjFmt::InvalidLengthError` (`on_fail` padrão retorna `''`).
 
-`CpfUtils::*` / `CnpjUtils::*` de uso indevido também se propagam quando agregadores aninhados são construídos ou chamados via `BrUtils`. Para tabelas de opções e casos extremos, veja [`cpf-utilities`](../cpf-utilities/README.pt.md) e [`cnpj-utilities`](../cnpj-utilities/README.pt.md).
+`CpfUtils::*` / `CnpjUtils::*` de uso indevido também se propagam quando agregadores aninhados são construídos ou chamados via `BrUtils`. Para tabelas de opções e casos extremos, veja [`cpf-utilities`](packages/cpf-utilities/README.pt.md) e [`cnpj-utilities`](packages/cnpj-utilities/README.pt.md).
 
 ##### Resumo
 
@@ -1225,8 +1225,8 @@ rescue CnpjUtils::Error
 
 | Pacote | Principais recursos | README |
 |---------|----------------|--------|
-| [`cpf-utilities`](https://rubygems.org/gems/cpf-utilities) | `CpfUtils`, `CpfFormatter`, `CpfGenerator`, `CpfValidator`, `CpfFmt.cpf_fmt`, `CpfGen.cpf_gen`, `CpfVal.cpf_val` | [docs](../cpf-utilities/README.pt.md) |
-| [`cnpj-utilities`](https://rubygems.org/gems/cnpj-utilities) | `CnpjUtils`, `CnpjFormatter`, `CnpjGenerator`, `CnpjValidator`, `CnpjFmt.cnpj_fmt`, `CnpjGen.cnpj_gen`, `CnpjVal.cnpj_val` | [docs](../cnpj-utilities/README.pt.md) |
+| [`cpf-utilities`](https://rubygems.org/gems/cpf-utilities) | `CpfUtils`, `CpfFormatter`, `CpfGenerator`, `CpfValidator`, `CpfFmt.cpf_fmt`, `CpfGen.cpf_gen`, `CpfVal.cpf_val` | [docs](packages/cpf-utilities/README.pt.md) |
+| [`cnpj-utilities`](https://rubygems.org/gems/cnpj-utilities) | `CnpjUtils`, `CnpjFormatter`, `CnpjGenerator`, `CnpjValidator`, `CnpjFmt.cnpj_fmt`, `CnpjGen.cnpj_gen`, `CnpjVal.cnpj_val` | [docs](packages/cnpj-utilities/README.pt.md) |
 
 Todos os acima são puxados como dependências de **`br-utilities`**. Demos interativas: [CPF](https://cpf-utils.vercel.app/) e [CNPJ](https://cnpj-utils.vercel.app/).
 
@@ -1245,7 +1245,7 @@ Este projeto está sob a licença MIT — veja o arquivo [LICENSE](https://githu
 
 ## Changelog
 
-Veja o [CHANGELOG](./CHANGELOG.md) para alterações e histórico de versões.
+Veja o [CHANGELOG](packages/br-utilities/CHANGELOG.md) para alterações e histórico de versões.
 
 ---
 
