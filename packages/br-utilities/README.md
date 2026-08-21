@@ -1184,11 +1184,33 @@ rescue CnpjVal::DomainError
   # RangeError-rooted domain failures from cnpj-val
 ```
 
-##### `CpfUtils::TypeMismatchError` / `CpfUtils::InvalidArgumentCombinationError`
+##### `CpfUtils::TypeMismatchError`
 
-- **Inheritance:** `CpfUtils::TypeMismatchError < TypeError` and `CpfUtils::InvalidArgumentCombinationError < ArgumentError` (both include `CpfUtils::Error`).
-- **Category:** API misuse on the nested CPF aggregator.
-- **When it is raised:** Raised when nested `cpf` settings to `CpfUtils.new` are a non-`Hash`, or when `CpfUtils#format` / `#generate` mix an options `Hash` with keywords.
+- **Inheritance:** `CpfUtils::TypeMismatchError < TypeError < StandardError` (includes `CpfUtils::Error`)
+- **Category:** API misuse — the caller passed a value of the wrong type.
+- **When it is raised:** Raised when `CpfUtils.new` receives a non-`nil` `settings` argument that is not a `Hash`.
+- **Example:**
+
+```ruby
+CpfUtils.new('not-a-hash')   # raises CpfUtils::TypeMismatchError
+CpfUtils.new(false)          # raises CpfUtils::TypeMismatchError (false is non-nil)
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CpfUtils::TypeMismatchError
+  # CPF aggregator type-contract violation (not BrUtils::Error)
+
+rescue TypeError
+  # native type errors, including CpfUtils::TypeMismatchError
+```
+
+##### `CpfUtils::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CpfUtils::Error`)
+- **Category:** API misuse — the caller mixed mutually exclusive argument patterns.
+- **When it is raised:** Raised when `CpfUtils.new` receives both a non-`nil` settings `Hash` and any non-`nil` keyword, or when `#format` / `#generate` mix a non-`nil` options `Hash`/`*Options` with any non-`nil` keyword. `#is_valid` has no options path and does not raise this error.
 - **Example:**
 
 ```ruby
@@ -1199,18 +1221,40 @@ BrUtils.new.cpf.format({ hidden: true }, dash_key: '|')
 - **How to rescue it:**
 
 ```ruby
-rescue CpfUtils::TypeMismatchError, CpfUtils::InvalidArgumentCombinationError
-  # CPF aggregator misuse (not BrUtils::Error)
+rescue CpfUtils::InvalidArgumentCombinationError
+  # CPF aggregator invalid signature combination (not BrUtils::Error)
 
-rescue CpfUtils::Error
-  # every custom error that includes CpfUtils::Error
+rescue ArgumentError
+  # native argument errors, including CpfUtils::InvalidArgumentCombinationError
 ```
 
-##### `CnpjUtils::TypeMismatchError` / `CnpjUtils::InvalidArgumentCombinationError`
+##### `CnpjUtils::TypeMismatchError`
 
-- **Inheritance:** `CnpjUtils::TypeMismatchError < TypeError` and `CnpjUtils::InvalidArgumentCombinationError < ArgumentError` (both include `CnpjUtils::Error`).
-- **Category:** API misuse on the nested CNPJ aggregator.
-- **When it is raised:** Raised when nested `cnpj` settings to `CnpjUtils.new` are a non-`Hash`, or when `CnpjUtils#format` / `#generate` / `#is_valid` mix settings/options with keywords.
+- **Inheritance:** `CnpjUtils::TypeMismatchError < TypeError < StandardError` (includes `CnpjUtils::Error`)
+- **Category:** API misuse — the caller passed a value of the wrong type.
+- **When it is raised:** Raised when `CnpjUtils.new` receives a non-`nil` `settings` argument that is not a `Hash`.
+- **Example:**
+
+```ruby
+CnpjUtils.new('not-a-hash')   # raises CnpjUtils::TypeMismatchError
+CnpjUtils.new(false)          # raises CnpjUtils::TypeMismatchError (false is non-nil)
+```
+
+- **How to rescue it:**
+
+```ruby
+rescue CnpjUtils::TypeMismatchError
+  # CNPJ aggregator type-contract violation (not BrUtils::Error)
+
+rescue TypeError
+  # native type errors, including CnpjUtils::TypeMismatchError
+```
+
+##### `CnpjUtils::InvalidArgumentCombinationError`
+
+- **Inheritance:** `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (includes `CnpjUtils::Error`)
+- **Category:** API misuse — the caller mixed mutually exclusive argument patterns.
+- **When it is raised:** Raised when `CnpjUtils.new`, `#format`, `#generate`, `#is_valid`, or the class helpers receive both a non-`nil` settings/options `Hash` (or options instance) and any non-`nil` keyword at the same time.
 - **Example:**
 
 ```ruby
@@ -1221,11 +1265,11 @@ BrUtils.new.cnpj.format({ hidden: true }, slash_key: '|')
 - **How to rescue it:**
 
 ```ruby
-rescue CnpjUtils::TypeMismatchError, CnpjUtils::InvalidArgumentCombinationError
-  # CNPJ aggregator misuse (not BrUtils::Error)
+rescue CnpjUtils::InvalidArgumentCombinationError
+  # CNPJ aggregator invalid signature combination (not BrUtils::Error)
 
-rescue CnpjUtils::Error
-  # every custom error that includes CnpjUtils::Error
+rescue ArgumentError
+  # native argument errors, including CnpjUtils::InvalidArgumentCombinationError
 ```
 
 ### Bundled packages
