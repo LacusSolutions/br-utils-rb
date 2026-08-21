@@ -655,30 +655,30 @@ Component errors keep their package namespaces and propagate unchanged through t
 
 | Class | Inherits from | Category | Trigger condition |
 |-------|---------------|----------|-------------------|
-| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Both an options instance/`Hash` and any non-`nil` keyword on `CpfUtils#format` / `#generate` |
-| `CpfUtils::TypeMismatchError` | `CpfUtils::TypeMismatchError < TypeError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Non-`nil` nested `cpf` settings `Hash` contract violation on `CpfUtils.new` |
-| `CnpjUtils::InvalidArgumentCombinationError` | `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Both settings/options and any non-`nil` keyword on `CnpjUtils` construct/`#format` / `#generate` / `#is_valid` |
-| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` nested `cnpj` settings `Hash` contract violation on `CnpjUtils.new` |
-| `CpfFmt::InvalidArgumentCombinationError` | `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
-| `CpfFmt::TypeMismatchError` | `CpfFmt::TypeMismatchError < TypeError < StandardError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
-| `CpfGen::InvalidArgumentCombinationError` | `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
-| `CpfGen::TypeMismatchError` | `CpfGen::TypeMismatchError < TypeError < StandardError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
-| `CpfVal::TypeMismatchError` | `CpfVal::TypeMismatchError < TypeError < StandardError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
 | `CnpjFmt::InvalidArgumentCombinationError` | `CnpjFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CnpjFormatter` / `cnpj_fmt` |
 | `CnpjFmt::TypeMismatchError` | `CnpjFmt::TypeMismatchError < TypeError < StandardError` (+ `include CnpjFmt::Error`) | API misuse | CNPJ input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
 | `CnpjGen::InvalidArgumentCombinationError` | `CnpjGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CnpjGenerator` / `cnpj_gen` |
 | `CnpjGen::TypeMismatchError` | `CnpjGen::TypeMismatchError < TypeError < StandardError` (+ `include CnpjGen::Error`) | API misuse | Generator option (`format` / `prefix` / `type`) has the wrong type |
+| `CnpjUtils::InvalidArgumentCombinationError` | `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Both settings/options and any non-`nil` keyword on `CnpjUtils` construct/`#format` / `#generate` / `#is_valid` |
+| `CnpjUtils::TypeMismatchError` | `CnpjUtils::TypeMismatchError < TypeError < StandardError` (+ `include CnpjUtils::Error`) | API misuse | Non-`nil` nested `cnpj` settings `Hash` contract violation on `CnpjUtils.new` |
 | `CnpjVal::InvalidArgumentCombinationError` | `CnpjVal::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CnpjVal::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CnpjValidator` / `cnpj_val` |
 | `CnpjVal::TypeMismatchError` | `CnpjVal::TypeMismatchError < TypeError < StandardError` (+ `include CnpjVal::Error`) | API misuse | CNPJ input or validator option has the wrong type |
-| `CpfFmt::InvalidLengthError` | `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
-| `CpfFmt::OutOfRangeError` | `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
-| `CpfFmt::ValidationError` | `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
-| `CpfGen::ValidationError` | `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (+ `include CpfGen::Error`) | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
+| `CpfFmt::InvalidArgumentCombinationError` | `CpfFmt::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfFmt::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfFormatter` / `cpf_fmt` |
+| `CpfFmt::TypeMismatchError` | `CpfFmt::TypeMismatchError < TypeError < StandardError` (+ `include CpfFmt::Error`) | API misuse | CPF input or formatter option has the wrong type (or `on_fail` return is not a `String`) |
+| `CpfGen::InvalidArgumentCombinationError` | `CpfGen::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfGen::Error`) | API misuse | Both an `options` instance/`Hash` and any non-`nil` keyword on `CpfGenerator` / `cpf_gen` |
+| `CpfGen::TypeMismatchError` | `CpfGen::TypeMismatchError < TypeError < StandardError` (+ `include CpfGen::Error`) | API misuse | Generator option (`format` / `prefix`) has the wrong type |
+| `CpfUtils::InvalidArgumentCombinationError` | `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Both an options instance/`Hash` and any non-`nil` keyword on `CpfUtils#format` / `#generate` |
+| `CpfUtils::TypeMismatchError` | `CpfUtils::TypeMismatchError < TypeError < StandardError` (+ `include CpfUtils::Error`) | API misuse | Non-`nil` nested `cpf` settings `Hash` contract violation on `CpfUtils.new` |
+| `CpfVal::TypeMismatchError` | `CpfVal::TypeMismatchError < TypeError < StandardError` (+ `include CpfVal::Error`) | API misuse | CPF input is not a `String` or `Array` of strings |
 | `CnpjFmt::InvalidLengthError` | `CnpjFmt::InvalidLengthError < CnpjFmt::DomainError < RangeError < StandardError` (+ `include CnpjFmt::Error`) | Domain error | Sanitized length ≠ 14 — **passed to `on_fail`**, not raised by `#format` |
 | `CnpjFmt::OutOfRangeError` | `CnpjFmt::OutOfRangeError < CnpjFmt::DomainError < RangeError < StandardError` (+ `include CnpjFmt::Error`) | Domain error | `hidden_start` / `hidden_end` outside `0`–`13` |
 | `CnpjFmt::ValidationError` | `CnpjFmt::ValidationError < CnpjFmt::DomainError < RangeError < StandardError` (+ `include CnpjFmt::Error`) | Domain error | `hidden_key` / `dot_key` / `slash_key` / `dash_key` contains a disallowed character |
 | `CnpjGen::ValidationError` | `CnpjGen::ValidationError < CnpjGen::DomainError < RangeError < StandardError` (+ `include CnpjGen::Error`) | Domain error | Ineligible `prefix`, or `type` not in `'alphabetic'` / `'alphanumeric'` / `'numeric'` |
 | `CnpjVal::ValidationError` | `CnpjVal::ValidationError < CnpjVal::DomainError < RangeError < StandardError` (+ `include CnpjVal::Error`) | Domain error | Validator `type` is not `'alphanumeric'` or `'numeric'` |
+| `CpfFmt::InvalidLengthError` | `CpfFmt::InvalidLengthError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | Sanitized length ≠ 11 — **passed to `on_fail`**, not raised by `#format` |
+| `CpfFmt::OutOfRangeError` | `CpfFmt::OutOfRangeError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_start` / `hidden_end` outside `0`–`10` |
+| `CpfFmt::ValidationError` | `CpfFmt::ValidationError < CpfFmt::DomainError < RangeError < StandardError` (+ `include CpfFmt::Error`) | Domain error | `hidden_key` / `dot_key` / `dash_key` contains a disallowed character |
+| `CpfGen::ValidationError` | `CpfGen::ValidationError < CpfGen::DomainError < RangeError < StandardError` (+ `include CpfGen::Error`) | Domain error | `prefix` is ineligible (zeroed base or 9 repeated digits) |
 
 ##### `CpfFmt::DomainError`
 
