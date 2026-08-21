@@ -1177,11 +1177,33 @@ rescue CnpjVal::DomainError
   # falhas de domínio com raiz em RangeError de cnpj-val
 ```
 
-##### `CpfUtils::TypeMismatchError` / `CpfUtils::InvalidArgumentCombinationError`
+##### `CpfUtils::TypeMismatchError`
 
-- **Herança:** `CpfUtils::TypeMismatchError < TypeError` and `CpfUtils::InvalidArgumentCombinationError < ArgumentError` (ambos incluem `CpfUtils::Error`).
-- **Categoria:** Uso indevido da API on the nested CPF aggregator.
-- **Quando é lançado:** Lançado quando settings `cpf` aninhados em `CpfUtils.new` não são um `Hash`, ou quando `CpfUtils#format` / `#generate` misturam um `Hash` de options com argumentos nomeados.
+- **Herança:** `CpfUtils::TypeMismatchError < TypeError < StandardError` (inclui `CpfUtils::Error`)
+- **Categoria:** Uso indevido da API — o caller passou um valor do tipo errado.
+- **Quando é lançado:** Quando `CpfUtils.new` recebe um argumento `settings` não-`nil` que não é um `Hash`.
+- **Exemplo:**
+
+```ruby
+CpfUtils.new('not-a-hash')   # lança CpfUtils::TypeMismatchError
+CpfUtils.new(false)          # lança CpfUtils::TypeMismatchError (false é não-nil)
+```
+
+- **Como resgatar:**
+
+```ruby
+rescue CpfUtils::TypeMismatchError
+  # violação de contrato de tipo do agregador de CPF (não BrUtils::Error)
+
+rescue TypeError
+  # erros nativos de tipo, incluindo CpfUtils::TypeMismatchError
+```
+
+##### `CpfUtils::InvalidArgumentCombinationError`
+
+- **Herança:** `CpfUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (inclui `CpfUtils::Error`)
+- **Categoria:** Uso indevido da API — o caller misturou padrões de argumentos mutuamente exclusivos.
+- **Quando é lançado:** Quando `CpfUtils.new` recebe um `Hash` de settings não-`nil` e qualquer argumento nomeado não-`nil`, ou quando `#format` / `#generate` misturam um `Hash`/`*Options` de options não-`nil` com qualquer argumento nomeado não-`nil`. `#is_valid` não tem caminho de options e não lança este erro.
 - **Exemplo:**
 
 ```ruby
@@ -1192,18 +1214,40 @@ BrUtils.new.cpf.format({ hidden: true }, dash_key: '|')
 - **Como resgatar:**
 
 ```ruby
-rescue CpfUtils::TypeMismatchError, CpfUtils::InvalidArgumentCombinationError
-  # uso indevido do agregador de CPF (não BrUtils::Error)
+rescue CpfUtils::InvalidArgumentCombinationError
+  # combinação inválida de assinatura do agregador de CPF (não BrUtils::Error)
 
-rescue CpfUtils::Error
-  # todo erro customizado que inclui CpfUtils::Error
+rescue ArgumentError
+  # erros nativos de argumento, incluindo CpfUtils::InvalidArgumentCombinationError
 ```
 
-##### `CnpjUtils::TypeMismatchError` / `CnpjUtils::InvalidArgumentCombinationError`
+##### `CnpjUtils::TypeMismatchError`
 
-- **Herança:** `CnpjUtils::TypeMismatchError < TypeError` and `CnpjUtils::InvalidArgumentCombinationError < ArgumentError` (ambos incluem `CnpjUtils::Error`).
-- **Categoria:** Uso indevido da API on the nested CNPJ aggregator.
-- **Quando é lançado:** Lançado quando settings `cnpj` aninhados em `CnpjUtils.new` não são um `Hash`, ou quando `CnpjUtils#format` / `#generate` / `#is_valid` misturam settings/options com argumentos nomeados.
+- **Herança:** `CnpjUtils::TypeMismatchError < TypeError < StandardError` (inclui `CnpjUtils::Error`)
+- **Categoria:** Uso indevido da API — o caller passou um valor do tipo errado.
+- **Quando é lançado:** Quando `CnpjUtils.new` recebe um argumento `settings` não-`nil` que não é um `Hash`.
+- **Exemplo:**
+
+```ruby
+CnpjUtils.new('not-a-hash')   # lança CnpjUtils::TypeMismatchError
+CnpjUtils.new(false)          # lança CnpjUtils::TypeMismatchError (false é não-nil)
+```
+
+- **Como resgatar:**
+
+```ruby
+rescue CnpjUtils::TypeMismatchError
+  # violação de contrato de tipo do agregador de CNPJ (não BrUtils::Error)
+
+rescue TypeError
+  # erros nativos de tipo, incluindo CnpjUtils::TypeMismatchError
+```
+
+##### `CnpjUtils::InvalidArgumentCombinationError`
+
+- **Herança:** `CnpjUtils::InvalidArgumentCombinationError < ArgumentError < StandardError` (inclui `CnpjUtils::Error`)
+- **Categoria:** Uso indevido da API — o caller misturou padrões de argumentos mutuamente exclusivos.
+- **Quando é lançado:** Quando `CnpjUtils.new`, `#format`, `#generate`, `#is_valid` ou os helpers de classe recebem um `Hash`/instância de settings/options não-`nil` e qualquer argumento nomeado não-`nil` ao mesmo tempo.
 - **Exemplo:**
 
 ```ruby
@@ -1214,11 +1258,11 @@ BrUtils.new.cnpj.format({ hidden: true }, slash_key: '|')
 - **Como resgatar:**
 
 ```ruby
-rescue CnpjUtils::TypeMismatchError, CnpjUtils::InvalidArgumentCombinationError
-  # uso indevido do agregador de CNPJ (não BrUtils::Error)
+rescue CnpjUtils::InvalidArgumentCombinationError
+  # combinação inválida de assinatura do agregador de CNPJ (não BrUtils::Error)
 
-rescue CnpjUtils::Error
-  # todo erro customizado que inclui CnpjUtils::Error
+rescue ArgumentError
+  # erros nativos de argumento, incluindo CnpjUtils::InvalidArgumentCombinationError
 ```
 
 ### Pacotes incluídos
